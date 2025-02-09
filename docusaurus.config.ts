@@ -45,7 +45,7 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Strategy System',
+          label: 'Movement System',
         },
         {
           href: 'https://discord.gg/uMKThEBvDJ',
