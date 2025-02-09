@@ -48,7 +48,7 @@ const config: Config = {
           label: 'Strategy System',
         },
         {
-          href: 'https://discordapp.com/invite/pioneer-games',
+          href: 'https://discord.gg/uMKThEBvDJ',
           label: 'Discord',
           position: 'right',
         },
