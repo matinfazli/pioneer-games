@@ -35,11 +35,11 @@ const config: Config = {
   themeConfig: {
     // image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: 'Pioneer Games',
-      // logo: {
-      //   alt: 'My Site Logo',
-      //   src: 'img/logo.svg',
-      // },
+      logo: {
+        alt: 'Pioneer Games',
+        src: 'img/logo-dark.svg',
+        srcDark: 'img/logo-light.svg',
+      },
       items: [
         {
           type: 'docSidebar',
