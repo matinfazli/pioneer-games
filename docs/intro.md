@@ -2,11 +2,11 @@
 sidebar_position: 1
 ---
 
-# Pioneer Mass Movement System - Overview
+# Overview
 
-Let's discover the basics of the system
+Let's discover the basics of the system.
 
-## Main features of the system:
+## Main features of the system
 
 These are the main features of the system:
 
