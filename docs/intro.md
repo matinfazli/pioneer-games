@@ -2,46 +2,26 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Pioneer Mass Movement System - Overview
 
-Let's discover **Docusaurus in less than 10 minutes**.
+Let's discover the basics of the system
 
-## Getting Started
+## Main features of the system:
 
-Get started by **creating a new site**.
+These are the main features of the system:
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+- Select and move hundreds of units around a map
+- Units avoid each other and the environment
+- Different types of units with separate logic
+- Create formations (e.g. grid or circle)
+- Units have a task queue (e.g. “Move to location” and then “Gather resource”)
 
-### What you'll need
+## Working with the system
 
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+The Pioneer Mass Movement System is mainly a C++ project utilizing the mass framework. C++ knowledge and a basic understanding of the mass framework is required to use the system in your own project.
 
-## Generate a new site
+Without C++ knowledge, you are only able to add and change the assets. For example, you can add your own units, buildings or resources. However adding custom logic via bleuprints is tricky because the system uses the mass framework and the majority of the logic there is written in C++.
 
-Generate a new Docusaurus site using the **classic template**.
+## Getting help
 
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+If you have any questions, feel free to ask in our discord server: https://discord.com/invite/uMKThEBvDJ
