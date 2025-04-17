@@ -13,6 +13,7 @@ After installing the plugin, go to your DefaultGame.ini and paste these lines in
 ```
 [/Script/CommonInput.CommonInputSettings]
 bEnableDefaultInputConfig=False
+InputData=/Pioneer/Pioneer/Core/Input/CUI_InputData.CUI_InputData_C
 ```
 
 Then go to DefaultEngine.ini and paste these lines into it:
