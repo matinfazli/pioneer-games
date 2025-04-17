@@ -8,14 +8,18 @@ Let's discover the basics of the system.
 
 ## Installation
 
-After installing the plugin, go to your DefaultEngine.ini and paste these lines into it:
+After installing the plugin, go to your DefaultGame.ini and paste these lines into it:
+
+```
+[/Script/CommonInput.CommonInputSettings]
+bEnableDefaultInputConfig=False
+```
+
+Then go to DefaultEngine.ini and paste these lines into it:
 
 ```
 [/Script/Engine.Engine]
 GameViewportClientClassName=/Script/CommonUI.CommonGameViewportClient
-
-[/Script/CommonInput.CommonInputSettings]
-bEnableDefaultInputConfig=False
 
 [/Script/Engine.CollisionProfile]
 +Profiles=(Name="MassCapsule",CollisionEnabled=QueryOnly,bCanModify=True,ObjectTypeName="MassObject",CustomResponses=((Channel="WorldStatic",Response=ECR_Ignore),(Channel="WorldDynamic",Response=ECR_Ignore),(Channel="Pawn",Response=ECR_Ignore),(Channel="Visibility",Response=ECR_Ignore),(Channel="Camera",Response=ECR_Ignore),(Channel="PhysicsBody",Response=ECR_Ignore),(Channel="Vehicle",Response=ECR_Ignore),(Channel="Destructible",Response=ECR_Ignore),(Channel="MassTrace")),HelpMessage="Capsule of a mass actor")
