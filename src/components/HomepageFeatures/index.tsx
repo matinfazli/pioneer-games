@@ -11,32 +11,29 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
+    title: 'Built for Developers',
     Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+          This plugin is designed from the ground up to plug seamlessly into your UE5 project, so you can start building large-scale strategy games without complex setup.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
+    title: 'Focus on Gameplay',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+          Spend your time crafting compelling strategy mechanics—we'll handle the unit scaling, performance, and systems under the hood.
       </>
     ),
   },
   {
-    title: 'Powered by React',
+    title: 'Powered by Mass',
     Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+          Extend and customize your RTS logic while taking full advantage of UE5’s Mass framework power. Our plugin integrates cleanly with existing systems, making large battles smooth and manageable.
       </>
     ),
   },

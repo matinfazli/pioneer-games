@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# How to add your own assets to the system
+# Using your own assets
 
 Here you will find a video documentation on how to add your own assets: https://www.youtube.com/watch?v=uUeyAGTbrsM. 
 

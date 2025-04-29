@@ -48,16 +48,16 @@ These are the main features of the system:
 
 ## Working with the system
 
-The Pioneer Mass Movement System is mainly a C++ project utilizing the mass framework. C++ knowledge and a basic understanding of the mass framework is required to use the system in your own project.
+The Mass Strategy System is mainly a C++ project utilizing the Mass framework. C++ knowledge and a basic understanding of the Mass framework is required to use the system in your own project.
 
-Without C++ knowledge, you are only able to add and change the assets. For example, you can add your own units, buildings or resources. However adding custom logic via bleuprints is tricky because the system uses the mass framework and the majority of the logic there is written in C++.
+Without C++ knowledge, you are only able to add and change the assets. For example, you can add your own units, buildings or resources. However, adding custom logic via Blueprints is tricky because the system uses the Mass framework and the majority of the logic there is written in C++.
 
 ## Limitations
 
 Here are some of the main limitations of the system:
 
 - Movement is only possible on a flat ground (no Z-axis movement)
-- Up to 500 units with stable fps
+- Up to 1000 units with stable fps
 
 ## Getting help
 

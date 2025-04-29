@@ -6,7 +6,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Pioneer Games',
-  tagline: 'Dinosaurs are cool',
+  tagline: 'Next-Level RTS Development for Unreal Engine',
   favicon: 'img/favicon.ico',
   url: 'https://pioneer-games.com',
   baseUrl: '/',

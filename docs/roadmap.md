@@ -8,7 +8,6 @@ Here are the features that will be added in upcoming updates:
 
 - **Basic blueprint support**: Allowing to customize and expand the system using blueprints.
 - **Easier animation setup**: Improved workflow to setup animations.
-- **More units**: Optimized system to support 1.000+ units with stable fps.
 - **Improved collision setup**: Make collision easier and more precise.
 - **Movement in Z-axis**: Allow units to move upwards or downwards on the map.
 
