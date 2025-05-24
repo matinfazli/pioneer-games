@@ -2,39 +2,23 @@
 sidebar_position: 1
 ---
 
-# Overview
+# Introduction
 
-Let's discover the basics of the system.
+The Pioneer Mass Strategy System is a base foundation to build a top-down strategy game in Unreal Engine. 
+The system is built upon the Mass Entity framework. 
+Mass is a data-oriented framework designed for high-performance calculations on large amounts of entities.
 
-## Installation
+The main focus of the system is spawning, selecting and moving hundreds of units. 
+The building, resource and vertex animation systems are experimental.
 
-After installing the plugin, go to your DefaultGame.ini and paste these lines into it:
+Our overall vision is to make creating a strategy game as easy as a 3rd person game in Unreal Engine. 
+This base system is only the basic foundation and we will expand the system in a modular way, adding features 
+like building, combat, and so on.
 
-```
-[/Script/CommonInput.CommonInputSettings]
-bEnableDefaultInputConfig=False
-InputData=/Pioneer/Pioneer/Core/Input/CUI_InputData.CUI_InputData_C
-```
+## Be aware before you buy
+The Mass framework requires C++ code, and therefore most of the logic of the system is inside C++ files. To make your own game using this system you have to be familiar with using C++ code in Unreal Engine.
 
-Then go to DefaultEngine.ini and paste these lines into it:
-
-```
-[/Script/Engine.Engine]
-GameViewportClientClassName=/Script/CommonUI.CommonGameViewportClient
-
-[/Script/Engine.CollisionProfile]
-+Profiles=(Name="MassCapsule",CollisionEnabled=QueryOnly,bCanModify=True,ObjectTypeName="MassObject",CustomResponses=((Channel="WorldStatic",Response=ECR_Ignore),(Channel="WorldDynamic",Response=ECR_Ignore),(Channel="Pawn",Response=ECR_Ignore),(Channel="Visibility",Response=ECR_Ignore),(Channel="Camera",Response=ECR_Ignore),(Channel="PhysicsBody",Response=ECR_Ignore),(Channel="Vehicle",Response=ECR_Ignore),(Channel="Destructible",Response=ECR_Ignore),(Channel="MassTrace")),HelpMessage="Capsule of a mass actor")
-+Profiles=(Name="StationaryMassCapsule",CollisionEnabled=QueryOnly,bCanModify=True,ObjectTypeName="MassObject",CustomResponses=((Channel="WorldStatic",Response=ECR_Ignore),(Channel="WorldDynamic",Response=ECR_Ignore),(Channel="Visibility",Response=ECR_Ignore),(Channel="Camera",Response=ECR_Ignore),(Channel="PhysicsBody",Response=ECR_Ignore),(Channel="Vehicle",Response=ECR_Ignore),(Channel="Destructible",Response=ECR_Ignore),(Channel="MassTrace")),HelpMessage="Capsule of a stationary mass actor")
-+Profiles=(Name="MassMeshComponent",CollisionEnabled=NoCollision,bCanModify=True,ObjectTypeName="MassObject",CustomResponses=((Channel="WorldStatic",Response=ECR_Ignore),(Channel="WorldDynamic",Response=ECR_Ignore),(Channel="Pawn",Response=ECR_Ignore),(Channel="Visibility",Response=ECR_Ignore),(Channel="Camera",Response=ECR_Ignore),(Channel="PhysicsBody",Response=ECR_Ignore),(Channel="Vehicle",Response=ECR_Ignore),(Channel="Destructible",Response=ECR_Ignore)),HelpMessage="Mesh Component of Mass Actors")
-+DefaultChannelResponses=(Channel=ECC_GameTraceChannel1,DefaultResponse=ECR_Ignore,bTraceType=False,bStaticObject=False,Name="MassObject")
-+DefaultChannelResponses=(Channel=ECC_GameTraceChannel2,DefaultResponse=ECR_Ignore,bTraceType=True,bStaticObject=False,Name="MassTrace")
-
-[/Script/NavigationSystem.NavigationSystemV1]
-DataGatheringMode=Lazy
-
-[/Script/NavigationSystem.RecastNavMesh]
-RuntimeGeneration=Dynamic
-```
+Without C++ knowledge, you are only able to do very basic things like adding and changing the assets. For example, you can add your own units, buildings or resources. However, adding custom logic via Blueprints is difficult because most of the data is inside Fragments and would need to be manually exposed to Blueprints.
 
 ## Main features of the system
 
@@ -46,19 +30,9 @@ These are the main features of the system:
 - Create formations (e.g. grid or circle)
 - Units have a task queue (e.g. “Move to location” and then “Gather resource”)
 
-## Working with the system
-
-The Mass Strategy System is mainly a C++ project utilizing the Mass framework. C++ knowledge and a basic understanding of the Mass framework is required to use the system in your own project.
-
-Without C++ knowledge, you are only able to add and change the assets. For example, you can add your own units, buildings or resources. However, adding custom logic via Blueprints is tricky because the system uses the Mass framework and the majority of the logic there is written in C++.
-
 ## Limitations
 
 Here are some of the main limitations of the system:
 
 - Movement is only possible on a flat ground (no Z-axis movement)
 - Up to 1000 units with stable fps
-
-## Getting help
-
-If you have any questions, feel free to ask in our discord server: https://discord.com/invite/uMKThEBvDJ
