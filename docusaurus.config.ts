@@ -20,13 +20,17 @@ const config: Config = {
 
   presets: [
     [
-      'classic',
+      '@docusaurus/preset-classic',
       {
         docs: {
           sidebarPath: './sidebars.ts',
         },
         theme: {
           customCss: './src/css/custom.css',
+        },
+        gtag: {
+          trackingID: 'G-NDGRBW9JDM',
+          anonymizeIP: true,
         },
       } satisfies Preset.Options,
     ],
