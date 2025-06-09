@@ -42,6 +42,9 @@ After installation, go to the folder Pioneer → Core → Maps and open the leve
 
 The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the Movement System folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g. AC_SelectionSystem_Basic).
 
+## Common issues
+### When selecting a character and right-click to move the game crashes
+Please check if you have enabled any Mass plugin from Epic Games. Try disabling the Mass plugins and check if the game works now. This system doesn't require any Mass plugins to be activated. If you need a specific Mass plugin for your game and this causes this crash, let us know on Discord. We'll help you fix it. 
 
 ## Getting help
 
