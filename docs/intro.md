@@ -8,7 +8,7 @@ The Pioneer Mass Strategy System is a base foundation to build a top-down strate
 The system is built upon the Mass Entity framework. 
 Mass is a data-oriented framework designed for high-performance calculations on large amounts of entities.
 
-The main focus of the system is spawning, selecting and moving hundreds of units. 
+The main focus of the system is spawning, selecting and moving thousands of units. 
 The building, resource and vertex animation systems are experimental.
 
 Our overall vision is to make creating a strategy game as easy as a 3rd person game in Unreal Engine. 
@@ -24,15 +24,14 @@ Without C++ knowledge, you are only able to do very basic things like adding and
 
 These are the main features of the system:
 
-- Select and move hundreds of units around a map
+- Select and move thousands of units around a map
 - Units avoid each other and the environment
 - Different types of units with separate logic
-- Create formations (e.g. grid or circle)
-- Units have a task queue (e.g. “Move to location” and then “Gather resource”)
+- Top-Down camera and free camera mode with LOD logic
 
 ## Limitations
 
 Here are some of the main limitations of the system:
 
 - Movement is only possible on a flat ground (no Z-axis movement)
-- Up to 1000 units with stable fps
+- Up to 10.000 units with stable fps

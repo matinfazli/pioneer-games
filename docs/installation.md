@@ -40,7 +40,7 @@ RuntimeGeneration=Dynamic
 ## First steps with the plugin
 After installation, go to the folder Pioneer → Core → Maps and open the level L_DemoMap. Click on Play in Editor and check if everything works as expected after following the installation steps from above. If you run into any issues, ask us for help on our Discord server.
 
-The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the Movement System folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g. AC_SelectionSystem_Basic).
+The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the Core → Game folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g. AC_SelectionSystem_Basic).
 
 ## Common issues
 ### When selecting a character and right-click to move the game crashes

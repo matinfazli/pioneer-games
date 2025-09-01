@@ -1,5 +1,5 @@
 ﻿---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Documentation
@@ -44,20 +44,10 @@ For standing units, it:
 - Creates a sort of "personal space bubble" around stationary units
 - Helps moving units navigate around these stationary obstacles
 
-## Unit formations
-The formation logic is inside the AC_MovementSystem_Advanced blueprint file. It works with the Environment Query System. You can find the EQS files in the EQS folder.
-
-The system sends a query to the click location and the query returns a list of locations. 
-These locations get passed to the “Move units” function, which creates “Move Tasks” and 
-adds these tasks to the task queue of the units (more information on the task queue below).
-
 ## Unit selection
 The start of the unit selection logic flow is inside the blueprint AC_SelectionSystem_Basic. 
 On click we get the mouse position on the viewport and save the mouse start position and 
 the mouse end position.
-
-If it’s a single click, we do a line trace, get the name of the hit actor and pass this 
-name to the “Select Entity” function, which handles the C++/Mass logic of the selection.
 
 If it’s a drag and drop selection, we create a quad corner vector list. 
 These are 4 vectors which build a rectangle on the map. 
@@ -79,29 +69,6 @@ Spawn Request Workflow:
   - Succeeded -> successfully spawned
   - Failed -> failed to spawn
   - RetryPending -> failed but will try again
-
-## Task Queue
-The task queue system works like a to-do list for units in your game. Here's how it works:
-
-Think of it as a line of tasks where each unit has its own list. 
-Tasks are handled one at a time, in order (first in, first out). 
-Each task has a status that tells us what's happening with it.
-
-Task States:
-- "Ready" (waiting to start)
-- "Running" (currently being done)
-- "Finished" (completed)
-
-How Tasks Work:
-- When a task is "Ready", the unit gets a special label (tag) that tells it what kind of task to do
-- While "Running", the unit keeps doing that task until it's done
-- When "Finished", the label is removed, and the task is crossed off the list
-
-Types of Tasks:
-- Moving around
-- Gathering resources
-
-The system checks all units regularly to see if they need to start new tasks or if they've finished their current ones.
 
 ## Simple Camera System
 Work in progress.
