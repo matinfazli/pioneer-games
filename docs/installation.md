@@ -42,6 +42,10 @@ After installation, go to the folder Pioneer → Core → Maps and open the leve
 
 The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the Core → Game folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g. AC_SelectionSystem_Basic).
 
+Here's a tutorial video on the first steps and also how to add your own custom meshes (for units and foliage):
+
+[![Tutorial - First Steps and Adding Your Own Meshes](https://img.youtube.com/vi/0gdzq-maipk/maxresdefault.jpg)](https://www.youtube.com/watch?v=0gdzq-maipk)
+
 ## Common issues
 ### When selecting a character and right-click to move the game crashes
 Please check if you have enabled any Mass plugin from Epic Games. Try disabling the Mass plugins and check if the game works now. This system doesn't require any Mass plugins to be activated. If you need a specific Mass plugin for your game and this causes this crash, let us know on Discord. We'll help you fix it. 
