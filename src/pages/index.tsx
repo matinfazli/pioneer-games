@@ -24,6 +24,11 @@ function HomepageHeader() {
                         to="/docs/intro">
                         Get Started
                     </Link>
+                    <Link
+                        className="button button--secondary button--lg"
+                        href="https://fab.com/s/84dc1399c94d">
+                        View on Fab
+                    </Link>
                 </div>
             </div>
         </header>
