@@ -252,7 +252,6 @@ Now that you understand movement commands:
 
 - Learn about the [Navigation System](../systems/navigation-system.md) to understand pathfinding
 - Explore [Creating Units](./creating-units.md) to configure movement parameters
-- Check out [Performance Optimization](./performance-optimization.md) for scaling tips
 - Review the [Entity System](../systems/entity-system.md) to understand fragments and tags
 
 ## Summary

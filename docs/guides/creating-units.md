@@ -49,7 +49,7 @@ This trait makes your unit renderable and is required for any visible unit.
 
 :::tip
 
-For static meshes, you can use any Static Mesh asset. For animated units, you'll need to set up vertex animations (see [Vertex Animation](#vertex-animation) section below).
+For static meshes, you can use any Static Mesh asset. For animated units, you'll need to set up vertex animations.
 
 :::
 
@@ -290,7 +290,6 @@ Now that you can create units:
 
 - Learn about the [Entity System](../systems/entity-system.md) to understand traits and fragments
 - Explore [Movement Commands](./movement-commands.md) to control units
-- Check out [Performance Optimization](./performance-optimization.md) for scaling to many units
 - Review the [Rendering System](../systems/rendering-system.md) for visual customization
 
 ## Summary
