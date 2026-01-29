@@ -1,25 +1,30 @@
-﻿---
+---
+title: Installation
+description: Step-by-step guide to install and configure Pioneer Mass Strategy System
 sidebar_position: 2
 ---
 
 # Installation
 
-After installing the plugin, check if the CommonUI plugin is installed. 
-Usually it should be installed automatically. 
-If not, add it to your project manually.
+After installing the plugin, check if the CommonUI plugin is installed. Usually it should be installed automatically. If not, add it to your project manually.
 
-Then go to the Config folder on your project and open the DefaultGame.ini 
-file and paste these lines into it:
+## Configuration
 
-```
+### DefaultGame.ini
+
+Go to the `Config` folder in your project and open the `DefaultGame.ini` file. Add these lines:
+
+```ini
 [/Script/CommonInput.CommonInputSettings]
 bEnableDefaultInputConfig=False
 InputData=/Pioneer/Pioneer/Core/Input/CUI_InputData.CUI_InputData_C
 ```
 
-Then go to DefaultEngine.ini and paste these lines into it:
+### DefaultEngine.ini
 
-```
+Open the `DefaultEngine.ini` file in your `Config` folder and add these lines:
+
+```ini
 [/Script/Engine.Engine]
 GameViewportClientClassName=/Script/CommonUI.CommonGameViewportClient
 
@@ -37,19 +42,22 @@ DataGatheringMode=Lazy
 RuntimeGeneration=Dynamic
 ```
 
-## First steps with the plugin
-After installation, go to the folder Pioneer → Core → Maps and open the level L_DemoMap. Click on Play in Editor and check if everything works as expected after following the installation steps from above. If you run into any issues, ask us for help on our Discord server.
+## First Steps
 
-The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the Core → Game folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g. AC_SelectionSystem_Basic).
+After installation, go to the folder `Pioneer → Core → Maps` and open the level `L_DemoMap`. Click on Play in Editor and check if everything works as expected after following the installation steps from above. If you run into any issues, ask us for help on our Discord server.
+
+The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the `Core → Game` folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g., `AC_SelectionSystem_Basic`).
 
 Here's a tutorial video on the first steps and also how to add your own custom meshes (for units and foliage):
 
 [![Tutorial - First Steps and Adding Your Own Meshes](https://img.youtube.com/vi/0gdzq-maipk/maxresdefault.jpg)](https://www.youtube.com/watch?v=0gdzq-maipk)
 
-## Common issues
-### When selecting a character and right-click to move the game crashes
-Please check if you have enabled any Mass plugin from Epic Games. Try disabling the Mass plugins and check if the game works now. This system doesn't require any Mass plugins to be activated. If you need a specific Mass plugin for your game and this causes this crash, let us know on Discord. We'll help you fix it. 
+## Common Issues
 
-## Getting help
+### Game crashes when selecting a character and right-clicking to move
 
-If you have any questions, feel free to ask in our discord server: https://discord.com/invite/uMKThEBvDJ
+Please check if you have enabled any Mass plugin from Epic Games. Try disabling the Mass plugins and check if the game works now. This system doesn't require any Mass plugins to be activated. If you need a specific Mass plugin for your game and this causes this crash, let us know on Discord. We'll help you fix it.
+
+## Getting Help
+
+If you have any questions, feel free to ask in our Discord server: https://discord.com/invite/uMKThEBvDJ
