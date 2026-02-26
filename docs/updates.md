@@ -6,6 +6,14 @@ sidebar_position: 10
 
 # Updates
 
+## Version 3.1
+
+**Performance improvements**
+
+Navigation and avoidance have been streamlined for better efficiency: we consolidated several navigation processors into a single pass, improved use of cached data, and simplified obstacle querying. You should see smoother behavior with large unit counts.
+
+---
+
 ## Version 3.0
 
 **Terrain navigation**
