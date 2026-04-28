@@ -23,23 +23,6 @@ Combat is intentionally built as data on top of the existing Mass unit stack. Th
 - **Death state** marks units for removal and gives the animation system time to play death and corpse linger states.
 - **Combat events** notify presentation systems when targets are acquired, attacks start, attacks land, projectiles launch, and projectiles impact.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Unit Attributes Trait"] --> B["Mass Combat Fragments"]
-    C["Ranged Attack Trait"] --> B
-    B --> D["Target Acquisition"]
-    D --> E["Melee Engagement"]
-    D --> F["Ranged Engagement"]
-    F --> G["Projectile Simulation"]
-    E --> H["Damage Processing"]
-    G --> H
-    H --> I["Death Handling"]
-    H --> J["Combat Events"]
-    J --> K["Animation, VFX, Audio, UI"]
-```
-
 ## Usage
 
 For a basic melee unit, add a **Unit Attributes Trait** to the Entity Config Asset. This gives the unit health, armor, base attack damage, base attack range, attack cooldown, and attack windup.

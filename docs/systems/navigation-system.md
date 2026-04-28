@@ -21,20 +21,6 @@ When a player issues a move or command order, Pioneer turns that intent into per
 - **Confinement** keeps units on navigable ground.
 - **Sleep states** reduce processing for idle units until they are commanded, pushed, or approached.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Move or Command Order"] --> B["Move Target"]
-    B --> C["Navmesh Path"]
-    C --> D["Waypoint Following"]
-    D --> E["Steering"]
-    E --> F["Avoidance Grid"]
-    F --> G["Moving and Standing Avoidance"]
-    G --> H["Hard Separation"]
-    H --> I["Transform and Orientation"]
-```
-
 ## Pathfinding
 
 The system uses Unreal's navigation mesh to calculate routes through the level. A valid navmesh must cover the areas where units spawn, move, fight, and regroup.

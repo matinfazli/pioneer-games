@@ -37,21 +37,6 @@ The animation processor chooses locomotion states from movement speed, then high
 
 Unit Animation Set Assets are expected to resolve the required semantic states so the runtime can use consistent state names across different unit types.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Anim Sequences"] --> B["Vertex Animation Data Asset"]
-    B --> C["Unit Animation Set Asset"]
-    C --> D["Unit Animation Trait"]
-    D --> E["Mass Animation Fragments"]
-    F["Movement Speed"] --> G["Animation State Processor"]
-    H["Combat Events"] --> G
-    I["Death Tags"] --> G
-    G --> J["Instance Animation Token"]
-    J --> K["Instanced Rendering"]
-```
-
 ## Usage
 
 To set up a Mass unit with the new animation flow:

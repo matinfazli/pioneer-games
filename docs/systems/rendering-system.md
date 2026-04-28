@@ -20,21 +20,6 @@ For strategy games, rendering is often the difference between a prototype that w
 - **Vertex Animation Textures** store baked animation data for GPU-driven animation.
 - **Unit Animation Sets** map gameplay states such as Idle, Walk, Run, Attack, and Death to baked clips.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Entity Config Asset"] --> B["Instanced Actor Trait"]
-    B --> C["Instance Data"]
-    C --> D["Instancing Subsystem"]
-    D --> E["ISM Components"]
-    F["LOD Trait"] --> G["LOD Processor"]
-    G --> C
-    H["Unit Animation Trait"] --> I["Animation State"]
-    I --> C
-    C --> J["Rendered Units"]
-```
-
 ## Instanced Rendering
 
 Instanced rendering groups units by mesh and renders them as instances. This avoids the cost of a full Actor and component hierarchy for every unit.

@@ -38,21 +38,6 @@ Pioneer includes these built-in formation types:
 
 Custom formations can be registered from code or Blueprint-facing component calls by providing local offsets.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Selected Units"] --> B["Group Subsystem"]
-    B --> C["Group Membership"]
-    B --> D["Control Slot Bindings"]
-    B --> E["Group Aggregates"]
-    C --> F["Formation Subsystem"]
-    F --> G["Formation Offsets"]
-    G --> H["Command System"]
-    H --> I["Per-Unit Move Targets"]
-    E --> J["UI Panels"]
-```
-
 ## Usage
 
 Use the group component on your Player Controller to expose common player actions:

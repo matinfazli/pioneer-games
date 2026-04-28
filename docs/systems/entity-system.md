@@ -22,20 +22,6 @@ Instead of building a separate Actor class for every unit, Pioneer treats units 
 - **Shared Fragment** - configuration shared by many entities of the same kind, such as subsystem references or per-type settings.
 - **Template** - the built Mass archetype created from a config and its traits, cached so the same unit type does not need to be rebuilt every spawn.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Entity Config Asset"] --> B["Traits"]
-    B --> C["Mass Template"]
-    C --> D["Spawned Entity"]
-    D --> E["Fragments"]
-    D --> F["Tags"]
-    E --> G["Processors"]
-    F --> G
-    G --> H["Movement, Combat, Rendering, UI"]
-```
-
 ## Common Traits
 
 Pioneer includes traits for the major unit capabilities:

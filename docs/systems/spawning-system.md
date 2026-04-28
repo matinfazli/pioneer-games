@@ -21,20 +21,6 @@ In Pioneer, spawning is more than "create N entities." It resolves the unit's En
 - **Spawn initializers** apply per-entity setup such as transform, movement defaults, and combat team.
 - **Team override** lets a spawner decide which side spawned units belong to without creating duplicate configs.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Spawner Actor or Gameplay Code"] --> B["Spawn Request"]
-    B --> C["Spawner Subsystem"]
-    C --> D["Entity Template Registry"]
-    D --> E["Mass Entity"]
-    E --> F["Rendering"]
-    E --> G["Navigation"]
-    E --> H["Selection"]
-    E --> I["Combat"]
-```
-
 ## Usage
 
 For map-authored spawning, place a **Unit Spawner** actor or duplicate a sample setup. Assign an Entity Config Asset, choose the team, spawn count, formation type, and preview settings, then place the actor where units should appear.

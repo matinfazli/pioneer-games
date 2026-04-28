@@ -19,18 +19,6 @@ Selection is split between a Player Controller component that handles input and 
 - **Group selection** can select a group directly or expand a member selection to the whole group.
 - **Live selection aggregate** provides UI-friendly counts, health totals, and primary unit type information.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Player Input"] --> B["Selection Component"]
-    B --> C["Selection Data"]
-    C --> D["Selection Subsystem"]
-    D --> E["Multi Selection Processor"]
-    E --> F["Selected Entity Handles"]
-    F --> G["Commands, Groups, UI"]
-```
-
 ## How Selection Works
 
 ### Player-Facing Layer

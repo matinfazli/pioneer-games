@@ -49,22 +49,6 @@ Use apply policies to define player intent:
 Use Replace for normal right-click commands and Queue when the player is holding your queue modifier key.
 :::
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Player Input or UI Button"] --> B["Command Component"]
-    B --> C["Command Subsystem"]
-    C --> D["Selected Entities or Groups"]
-    D --> E["Active Command"]
-    D --> F["Queued Commands"]
-    E --> G["Command Processors"]
-    F --> G
-    G --> H["Movement, Combat, Patrol, Follow"]
-    C --> I["Command Feedback Event"]
-    I --> J["UI and Audio Feedback"]
-```
-
 ## Usage
 
 Most games issue commands through a Player Controller component. The included RTS player controller demonstrates this pattern with command hotkeys, command card buttons, cursor targeting, context click behavior, and control group hotkeys.

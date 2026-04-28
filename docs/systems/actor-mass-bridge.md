@@ -37,20 +37,6 @@ Keep high-count units in Mass whenever possible. Use Actors for entities that ne
 - **Damage receiver** - Actor interface for receiving bridge-routed damage.
 - **Eligibility checks** decide whether a participant can initiate combat, receive combat, and be targeted.
 
-## Architecture
-
-```mermaid
-graph TD
-    A["Actor Participant Component"] --> B["Actor-Mass Bridge Subsystem"]
-    C["Mass Participant Trait"] --> B
-    B --> D["Participant Handles"]
-    B --> E["Combat Profiles"]
-    B --> F["Location and Transform Resolution"]
-    B --> G["Damage Routing"]
-    G --> H["Mass Combat Damage"]
-    G --> I["Actor Damage Receiver Interface"]
-```
-
 ## Actor Setup
 
 For an Actor to participate:
