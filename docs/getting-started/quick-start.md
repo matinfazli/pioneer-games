@@ -6,149 +6,125 @@ sidebar_position: 3
 
 # Quick Start
 
-This guide will get you up and running with Pioneer in just a few minutes. After completing the [installation](./installation.md), follow these steps to see the system in action.
+This guide gets you into the included Pioneer demos quickly. After completing the [Installation Guide](./installation.md), open a sample map, play with the core workflows, and use the working examples as a reference before creating your own content.
 
-## Step 1: Test the Demo Map
+## Step 1: Enable Plugin Content
 
-The fastest way to see Pioneer in action is to use the provided demo map:
+In the Content Browser, enable plugin content if the `Pioneer`, `RTSMassBattle`, or `TopDownZombieShooter` folders are hidden.
 
-1. Navigate to `Pioneer → Core → Maps` in the Content Browser
-2. Open the level `L_DemoMap`
-3. Click **Play in Editor** (PIE)
-4. You should see units already spawned in the level
+The most useful maps are:
+
+- `Pioneer/Core/Maps/L_DemoMap`
+- `Pioneer/Core/Maps/L_HeightDemoMap`
+- `RTSMassBattle/Maps/L_MassBattleDemo`
+- `TopDownZombieShooter/Maps/L_TDZS_DemoMap`
+
+## Step 2: Choose A Starting Map
+
+Open `Pioneer/Core/Maps/L_DemoMap` if you want to see the foundation first: selection, movement, spawning, navigation, avoidance, instanced rendering, and LOD.
+
+Open `RTSMassBattle/Maps/L_MassBattleDemo` if you want the fastest look at Pioneer as an RTS toolkit: deployment, groups, formations, command cards, melee combat, ranged combat, projectiles, and match UI.
+
+Open `TopDownZombieShooter/Maps/L_TDZS_DemoMap` if you want to see the Actor-Mass Bridge in action, with detailed Actor operatives fighting Mass enemies.
 
 :::tip
-
-If you haven't completed the installation steps yet, make sure to configure `DefaultGame.ini` and `DefaultEngine.ini` as described in the [Installation Guide](./installation.md).
-
+If you are evaluating the combat update for marketplace review, start with `L_MassBattleDemo`, then open `L_TDZS_DemoMap`.
 :::
 
-## Step 2: Basic Controls
+## Step 3: Test Basic Controls
 
-Once in the demo map, try these basic controls:
+Controls vary slightly by sample, but these workflows are the main ones to test.
 
-### Selecting Units
+### Core And RTS Samples
 
-- **Left-click** on a unit to select it
-- **Drag left-click** to create a selection box and select multiple units
-- Selected units will be highlighted
+- Left-click or drag-select units.
+- Right-click ground to move selected units.
+- Use command hotkeys or command-card buttons in the RTS sample.
+- Queue commands with the queue modifier configured in the sample input setup.
+- Create, recall, merge, and ungroup control groups in the RTS sample.
+- Try attack move, hold position, patrol, follow, retreat, and charge where exposed by the sample UI.
 
-### Moving Units
+### Top Down Zombie Shooter Sample
 
-- **Right-click** on the ground to move selected units to that location
-- Units will automatically pathfind around obstacles
-- Units will avoid each other while moving
+- Control the camera with the sample pan and zoom inputs.
+- Issue context commands to the operative squad.
+- Use face-direction command behavior to orient the squad.
+- Watch Actor operatives fire at Mass zombie enemies through the bridge.
+- Choose run upgrades when the level-up UI appears.
 
-### Camera Controls
+## Step 4: Inspect The Setup
 
-- **WASD** or **Arrow Keys** - Move the camera
-- **Mouse Wheel** - Zoom in/out
-- **Middle Mouse Button + Drag** - Rotate camera (if enabled)
+The main Blueprint and content locations are:
 
-## Step 3: Understanding the Setup
+- `Pioneer/Core/Game` - original core game mode, player controller, and pawn setup
+- `Pioneer/Core/Mass` - core Mass unit configs and spawner assets
+- `Pioneer/Units` - combat-ready unit examples such as archer, swordsman, knight, longbowman, peasant, warlord, and catapult
+- `RTSMassBattle` - RTS sample Blueprints, data, HUD, input, deployment, and map
+- `TopDownZombieShooter` - top-down shooter sample Blueprints, data, input, UI, zombie configs, and map
 
-The demo map uses the following setup:
+Most player-facing behavior is assembled through Player Controller components. The C++ systems provide the runtime logic, while the sample Blueprints show how to wire them into an actual game mode.
 
-### Game Mode and Player Controller
+## Step 5: Create Or Modify Units
 
-The main game blueprints are located in `Pioneer → Core → Game`:
-- **Game Mode** - Sets up the game rules
-- **Player Controller** - Handles input and contains system components
-- **Player Pawn** - The camera/player representation
+Units are authored as Entity Config Assets. Start by duplicating an included unit config, then adjust traits:
 
-### System Components
+- **Instanced Actor Trait** for mesh and rendering
+- **Movement Trait** for movement behavior
+- **Avoidance Trait** for crowd separation
+- **Selectable Trait** for selection
+- **LOD Trait** for large-count optimization
+- **Unit Attributes Trait** for health, armor, and melee attack values
+- **Ranged Attack Trait** for projectile units
+- **Unit Animation Trait** for Idle, Walk, Run, Charge, Attack, and Death animation states
+- **Actor-Mass Bridge Participant Trait** when the entity should interact with bridged Actors
 
-Most functionality is attached to the Player Controller as actor components:
-- `AC_SelectionSystem_Basic` - Handles unit selection
-- `AC_CPP_MovementSystem_Abstract` - Handles spawning and movement commands
-- Other system components for rendering, navigation, etc.
+See [Creating Units](../guides/creating-units.md).
 
-## Step 4: Spawning Your Own Units
+## Step 6: Learn The Systems
 
-To spawn units programmatically, you can use the Movement System component:
-
-1. Get the `AC_CPP_MovementSystem_Abstract` component from your Player Controller
-2. Call `SpawnUnits()` with:
-   - **Entity Type** - An entity config asset defining the unit
-   - **Number of Units** - How many to spawn
-   - **Spawn Transforms** - Array of locations/orientations
-
-The system will automatically:
-- Create entities with the correct traits and fragments
-- Register them with rendering, navigation, and other systems
-- Handle time-sliced spawning to maintain performance
-
-:::note
-
-For detailed information on creating entity configs and defining unit types, see the [Creating Units Guide](../guides/creating-units.md).
-
-:::
-
-## Step 5: Next Steps
-
-Now that you've seen Pioneer in action, here's what to explore next:
-
-### Learn the Systems
-
-- **[Navigation System](../systems/navigation-system.md)** - Understand pathfinding and avoidance
-- **[Rendering System](../systems/rendering-system.md)** - Learn about ISM rendering and LOD
-- **[Entity System](../systems/entity-system.md)** - Master traits, fragments, and entity templates
-- **[Selection System](../systems/selection-system.md)** - Understand how selection works
-- **[Spawning System](../systems/spawning-system.md)** - Learn about entity spawning
-
-### Create Your Own Units
-
-- **[Creating Units Guide](../guides/creating-units.md)** - Step-by-step guide to creating unit types
-- Learn about entity config assets and traits
-- Configure meshes, animations, and behaviors
-
-### Customize Your Game
-
-- Set up your own game mode and player controller
-- Configure camera settings
-- Adjust movement and avoidance parameters
-- Create custom entity types with different capabilities
+- [Entity System](../systems/entity-system.md)
+- [Navigation System](../systems/navigation-system.md)
+- [Rendering System](../systems/rendering-system.md)
+- [Selection System](../systems/selection-system.md)
+- [Spawning System](../systems/spawning-system.md)
+- [Combat System](../systems/combat-system.md)
+- [Command System](../systems/command-system.md)
+- [Groups and Formations](../systems/group-formation-system.md)
+- [Actor-Mass Bridge](../systems/actor-mass-bridge.md)
+- [Mass Animation System](../systems/mass-animation-system.md)
 
 ## Common First-Time Issues
 
-### Units not appearing
+### Plugin content is missing
 
-- Check that a navigation mesh exists and is built in your level
-- Verify entity config assets are properly configured
-- Ensure the Instancing Subsystem is initialized
+Enable plugin content in the Content Browser view options.
 
-### Selection not working
+### Units do not move
 
-- Verify `AC_SelectionSystem_Basic` is attached to your Player Controller
-- Check input bindings are configured correctly
-- Ensure units have the Selectable trait
+Build the navigation mesh, confirm the target location is on navmesh, and verify the unit config has Movement Trait.
 
-### Movement not working
+### Units do not attack
 
-- Make sure units have the Movement trait
-- Verify navigation mesh is built
-- Check that movement system component is properly set up
+Confirm Unit Attributes Trait is present, team IDs are valid and hostile, and enemies are within engagement range.
 
-### Performance issues
+### Ranged units do not fire
 
-- The system handles thousands of units, but performance depends on hardware
-- Use the built-in FPS counter to monitor performance
-- Adjust LOD settings if needed for your target hardware
+Confirm Ranged Attack Trait is present. If line of sight is enabled, test with clear sight lines before tuning projectile visuals.
+
+### Actor operatives and Mass enemies ignore each other
+
+Confirm both sides are registered with the Actor-Mass Bridge and have hostile combat profiles.
 
 ## Getting Help
 
 If you run into issues:
 
-1. Check the [Installation Guide](./installation.md) for common issues
-2. Review the system documentation for your specific problem
-3. Ask for help on our [Discord server](https://discord.com/invite/uMKThEBvDJ)
+1. Review the [Installation Guide](./installation.md).
+2. Check the relevant system page.
+3. Ask for help on the [Discord server](https://discord.com/invite/uMKThEBvDJ).
 
 ## Tutorial Video
 
-Here's a tutorial video covering the first steps and how to add your own custom meshes:
+This tutorial covers first steps and adding custom meshes:
 
 [![Tutorial - First Steps and Adding Your Own Meshes](https://img.youtube.com/vi/0gdzq-maipk/maxresdefault.jpg)](https://www.youtube.com/watch?v=0gdzq-maipk)
-
----
-
-**Ready to dive deeper?** Check out the [Systems Documentation](../systems/navigation-system.md) to understand how everything works under the hood!

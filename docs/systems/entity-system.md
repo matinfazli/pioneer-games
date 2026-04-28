@@ -1,245 +1,213 @@
 ---
 title: Entity System
 description: Understanding the trait-based entity architecture in Pioneer
-sidebar_position: 6
+sidebar_position: 1
 ---
 
 # Entity System
 
-The entity system provides the foundation for defining unit types and behaviors through a trait-based architecture. Built on Unreal Engine's Mass Entity framework, it uses a data-oriented design that enables efficient processing of thousands of entities.
+The Entity System is the foundation that makes Pioneer units reusable instead of one-off. It uses Entity Config Assets and traits to describe what each unit can do, then builds Mass templates that can be spawned efficiently at runtime.
 
-## Overview
+This composition-based workflow lets you create different unit types without writing custom code for every variation. A swordsman, archer, catapult, worker, zombie, or custom unit can share the same core systems while using different trait settings.
 
-Pioneer uses an **Entity Component System (ECS)** architecture where entities are defined by their **traits**, which in turn specify which **fragments** and **tags** the entity needs. This composition-based approach allows you to mix and match capabilities to create different unit types without writing custom code for each variation.
+Instead of building a separate Actor class for every unit, Pioneer treats units as data. Traits add the fragments, tags, shared configuration, and initialization data needed by each system. That keeps unit authoring approachable in the editor while still giving the runtime a data-oriented structure that scales to large armies.
 
-**Key Concepts:**
-- **Entities** - The units themselves (soldiers, workers, etc.)
-- **Traits** - Reusable building blocks that define entity capabilities
-- **Fragments** - Data containers that store entity state
-- **Tags** - Boolean flags that mark entities for specific processing
-- **Templates** - Pre-built entity configurations combining multiple traits
+## Key Concepts
 
-## Traits
+- **Entity** - a Mass unit in the simulation.
+- **Entity Config Asset** - the authored data asset that defines a unit type.
+- **Trait** - a reusable capability added to a unit config, such as movement, selection, combat, rendering, or animation.
+- **Fragment** - runtime data stored on an entity and read by Mass processors.
+- **Tag** - a lightweight marker used for filtering behavior.
+- **Shared Fragment** - configuration shared by many entities of the same kind, such as subsystem references or per-type settings.
+- **Template** - the built Mass archetype created from a config and its traits, cached so the same unit type does not need to be rebuilt every spawn.
 
-Traits are the primary way to define what an entity can do. Each trait is a reusable component that adds specific functionality to an entity by contributing fragments, tags, and shared data.
+## Architecture
 
-### How Traits Work
+```mermaid
+graph TD
+    A["Entity Config Asset"] --> B["Traits"]
+    B --> C["Mass Template"]
+    C --> D["Spawned Entity"]
+    D --> E["Fragments"]
+    D --> F["Tags"]
+    E --> G["Processors"]
+    F --> G
+    G --> H["Movement, Combat, Rendering, UI"]
+```
 
-When you add a trait to an entity configuration, the trait's `BuildTemplate` method is called. This method:
-1. Adds required fragments (data storage)
-2. Adds tags (processing markers)
-3. Adds shared fragments (configuration data shared across entities)
+## Common Traits
 
-### Common Traits
+Pioneer includes traits for the major unit capabilities:
 
-Pioneer provides several built-in traits:
-
-**Movement Trait** (`UMovementTrait`)
-- Enables pathfinding and movement
-- Adds velocity, steering, and navigation fragments
-- Configures movement speed, avoidance, and orientation
-
-**Instanced Actor Trait** (`UInstancedActorTrait`)
-- Makes the entity renderable using ISM
-- Adds instance data fragment with mesh and animation info
-- Configures rendering parameters
-
-**Selectable Trait** (`USelectableTrait`)
-- Makes the entity selectable via UI
-- Adds selection-related fragments
-
-**Avoidance Trait** (`UAvoidanceTrait`)
-- Enables collision avoidance with other units
-- Adds avoidance-related fragments and parameters
-
-**LOD Trait** (`ULODTrait`)
-- Enables dynamic LOD processing
-- Adds LOD fragments for distance-based optimization
-
-### Creating Custom Traits
-
-To create a custom trait:
-1. Inherit from `UEntityTraitBase`
-2. Override `BuildTemplate()` to add fragments and tags
-3. Add configurable properties that can be set in the editor
-4. Use `BuildContext.AddFragment<>()` to add data fragments
-5. Use `BuildContext.AddTag<>()` to add processing tags
+- **Instanced Actor Trait** - renders the entity through instanced static meshes.
+- **Movement Trait** - enables navmesh movement, steering, ground Z tracking, and orientation.
+- **Avoidance Trait** - adds moving avoidance, standing avoidance, hard separation, and overlap clamp settings.
+- **Selectable Trait** - lets the selection system include the entity and show selection presentation.
+- **LOD Trait** - reduces work for distant or low-priority units.
+- **Unit Attributes Trait** - adds health, armor, attack damage, attack range, and melee timing.
+- **Ranged Attack Trait** - adds projectile, line-of-sight, and ranged engagement behavior.
+- **Unit Animation Trait** - connects semantic animation states to a Unit Animation Set Asset.
+- **Actor-Mass Bridge Participant Trait** - lets a Mass entity interact with bridged Actors.
+- **Navigation Obstacle Trait** - lets an entity contribute obstacle behavior where needed.
 
 :::tip
-
-Traits can require other fragments using `BuildContext.RequireFragment<>()`. This ensures dependencies are met even if another trait adds them.
-
+Start from included configs in `Pioneer/Units` or `TopDownZombieShooter/Zombies`, then duplicate and tune. That keeps required trait combinations intact while you learn the system.
 :::
 
-## Fragments
+## Entity Config Assets
 
-Fragments are data structures that store entity state. Each entity has a collection of fragments that define what data it stores. Processors read and write fragments to update entity behavior.
+The recommended workflow is:
 
-### Fragment Types
+1. Create or duplicate an Entity Config Asset.
+2. Add the traits the unit needs.
+3. Configure trait properties.
+4. Use the config in a spawner, sample map, or custom spawning flow.
 
-**Regular Fragments** (`FMassFragment`)
-- One instance per entity
-- Stores entity-specific data
-- Examples: `FEntityTransformFragment`, `FVelocityFragment`, `FInstanceDataFragment`
+Entity configs can use inheritance. Put shared setup in a parent config, then make child configs for variations such as faster units, ranged units, elite units, or different visual skins.
 
-**Shared Fragments** (`FMassSharedFragment`)
-- Shared across multiple entities
-- Used for configuration data
-- Examples: Subsystem references, shared parameters
+Child configs override parent traits by class. This is useful for unit families: a base soldier config can define movement, rendering, selection, LOD, and common metadata, while child configs override only the combat stats, mesh, animation set, or ranged behavior that makes each unit different.
 
-**Const Shared Fragments** (`FMassConstSharedFragment`)
-- Immutable shared data
-- Used for read-only configuration
-- Examples: Movement parameters, avoidance settings
+## How Traits Build Units
 
-### Common Fragments
+Each trait contributes a focused piece of the final Mass template. For example:
 
-**Transform Fragments**
-- `FEntityTransformFragment` - Current position, rotation, scale
-- `FEntityPrevTransformFragment` - Previous frame transform (for motion vectors)
+- Instanced Actor Trait adds render data, mesh settings, radius, and the instancing subsystem connection.
+- Movement Trait adds velocity, force, movement parameters, path following, steering, ground Z, and orientation data.
+- Avoidance Trait adds the moving, standing, hard separation, and clamp settings used by the navigation processors.
+- Selectable Trait adds selection state and the mesh used for selection presentation.
+- Unit Attributes Trait adds health, armor, team-aware combat stats, and attack timing.
+- Unit Animation Trait connects the unit to a resolved animation set and initial animation state.
 
-**Movement Fragments**
-- `FVelocityFragment` - Current velocity
-- `FForceFragment` - Applied forces
-- `FMoveTargetFragment` - Target location for movement
-- `FSteeringFragment` - Steering behavior data
-- `FSleepStateFragment` - Whether entity is sleeping (idle optimization)
+When a unit spawns, Pioneer does not ask every system what to do with it manually. The entity's fragments and tags determine which processors include it. This is the main advantage of the trait workflow: adding a capability to a unit is mostly an authoring decision, not a custom gameplay branch.
 
-**Rendering Fragments**
-- `FInstanceDataFragment` - Mesh, animations, instance index
-- `FProcessingLODFragment` - Current LOD level and distance alpha
+## Trait Composition Examples
 
-**Navigation Fragments**
-- `FNavigationPathFragment` - Pathfinding path data
-- `FMoveCommandFragment` - Movement command information
+### Basic Moving Unit
 
-## Tags
+```text
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- Selectable Trait
+- LOD Trait
+```
 
-Tags are boolean markers that indicate an entity has a specific property or should be processed in a certain way. Unlike fragments, tags don't store data—they're just flags.
+### Melee Combat Unit
 
-### How Tags Work
+```text
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- Selectable Trait
+- LOD Trait
+- Unit Attributes Trait
+- Unit Animation Trait
+```
 
-Tags are used by processors to filter which entities to process:
-- A processor queries for entities with specific tags
-- Only entities with those tags are included in processing
-- Tags can be added/removed at runtime to change entity behavior
+### Ranged Combat Unit
 
-### Common Tags
+```text
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- Selectable Trait
+- LOD Trait
+- Unit Attributes Trait
+- Ranged Attack Trait
+- Unit Animation Trait
+```
 
-- `FSteerToCommandGoalTag` - Entity should steer toward move command goal
-- `FSleepingTag` - Entity is in sleep state (idle optimization)
-- `FUnitSelectedTag` - Entity is currently selected
-- `FMoveTaskTag` - Entity has a movement task
-- `FCanGatherResourcesTag` - Entity can gather resources
+### Actor-Mass Bridge Enemy
 
-## Entity Templates
+```text
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- LOD Trait
+- Unit Attributes Trait
+- Unit Animation Trait
+- Actor-Mass Bridge Participant Trait
+- Game-specific enemy behavior trait
+```
 
-Entity templates are pre-built configurations that combine multiple traits. They're created from `FEntityConfig` structures or `UEntityConfigAsset` data assets.
+## Runtime Lifecycle
 
-### Template Creation
+When a unit is spawned:
 
-When you define an entity configuration:
-1. Traits are collected (including from parent configs)
-2. Each trait's `BuildTemplate()` is called
-3. Fragments and tags are merged into a template
-4. The template is registered and can be used to spawn entities
+1. Pioneer resolves the Entity Config Asset.
+2. The config and parent configs provide their traits.
+3. Traits build a Mass template.
+4. The spawning system creates entities from that template.
+5. Spawn initializers apply per-entity data such as transform, initial movement state, and team overrides.
+6. Rendering, navigation, selection, combat, animation, and bridge systems process the entity based on its fragments and tags.
+7. When the entity dies or is removed, systems clean up runtime state and hide or recycle rendering instances as needed.
 
-### Template Inheritance
+## Extending Entities
 
-Entity configs support inheritance:
-- Child configs can inherit from parent configs
-- Child traits override parent traits of the same class
-- This allows creating variations (e.g., "Fast Soldier" inherits from "Soldier")
+To create a new gameplay capability, add a focused trait that contributes the fragments and tags your processors need. Keep the trait narrow: if it represents ranged combat, it should not also configure selection UI or camera behavior.
 
-### Using Templates
+Good custom trait examples:
 
-Templates are typically accessed through:
-- `UEntityConfigAsset` - Data asset containing entity configuration
-- `FEntityConfig` - Struct that can wrap an asset or define traits inline
-- `GetOrCreateEntityTemplate()` - Gets or creates the template for a world
+- a resource gatherer trait for workers
+- a morale trait for squads
+- a capture point trait for units that can claim objectives
+- a special ability trait for units that need ability cooldowns
 
-## Entity Lifecycle
-
-### Spawning
-
-1. **Template Selection** - Choose an entity template (from config asset)
-2. **Template Building** - Template is built from traits (if not already cached)
-3. **Entity Creation** - Mass Entity system creates entity with required fragments
-4. **Initialization** - Fragments are initialized with default or configured values
-5. **Registration** - Entity is registered with relevant subsystems (rendering, navigation, etc.)
-
-### Runtime
-
-- **Processing** - Processors update entities each frame based on their fragments and tags
-- **State Changes** - Tags can be added/removed, fragments can be modified
-- **Subsystem Updates** - Entities interact with subsystems (spawning, rendering, navigation)
-
-### Destruction
-
-- **Cleanup** - Fragments are cleaned up
-- **Subsystem Removal** - Entity is removed from subsystem registries
-- **Instance Hiding** - For rendered entities, instances are hidden (scaled to zero) rather than deleted immediately
+After the trait adds data to the template, your Mass processor can query entities with that data and run the behavior in batches.
 
 ## Configuration
 
-### Entity Config Assets
+Most users configure entities through the editor:
 
-The recommended way to define entity types is through `UEntityConfigAsset`:
-1. Create a new `Entity Config Asset` in the content browser
-2. Add traits to define capabilities
-3. Configure trait properties (movement speed, mesh, animations, etc.)
-4. Optionally set a parent asset for inheritance
-5. Use the asset when spawning entities
+- movement speed and steering values
+- mesh, radius, and rendering metadata
+- selection presentation
+- LOD thresholds
+- health, armor, and attack stats
+- ranged projectile settings
+- animation sets
+- bridge combat profiles
 
-### Inline Configuration
+Use C++ when adding a new kind of gameplay capability that needs custom fragments, tags, or processors.
 
-You can also create `FEntityConfig` structs inline in C++ code, adding traits programmatically. This is useful for:
-- Runtime entity variations
-- Debug configurations
-- Procedural entity generation
+## Performance Considerations
 
-## Best Practices
-
-### Trait Composition
-
-- **Keep traits focused** - Each trait should add one cohesive set of functionality
-- **Use inheritance** - Create base configs and derive variations
-- **Reuse traits** - Don't duplicate functionality, compose existing traits
-
-### Fragment Design
-
-- **Store only necessary data** - Keep fragments lean for performance
-- **Use shared fragments** - For configuration that doesn't change per entity
-- **Group related data** - Keep related properties in the same fragment
-
-### Performance
-
-- **Minimize fragment count** - More fragments mean more memory per entity
-- **Use tags efficiently** - Tags are cheap, use them for filtering
-- **Leverage sleep state** - Idle entities can use sleep optimization
+- Keep traits focused and avoid adding capabilities a unit does not need.
+- Use shared data for per-unit-type configuration.
+- Use LOD on units that appear in large numbers.
+- Prefer Mass entities for high-count units and Actors for low-count special objects.
+- Use inheritance to keep unit families consistent.
 
 ## Troubleshooting
 
-### Entity not spawning
+### Entity does not spawn
 
-- Verify entity config asset is valid
-- Check that all required traits are present
-- Ensure template builds successfully (check logs)
+- Confirm the Entity Config Asset is assigned to the spawner.
+- Check logs for template validation errors.
+- Confirm parent configs and referenced assets load correctly.
 
-### Entity missing functionality
+### Entity is missing behavior
 
-- Verify the appropriate trait is added to the config
-- Check that trait properties are configured correctly
-- Ensure required subsystems are initialized
+- Confirm the required trait is present.
+- Confirm related systems are available in the map or game mode.
+- Compare against an included working unit config.
 
-### Performance issues
+### Combat behavior is missing
 
-- Review fragment count per entity
-- Check if unnecessary traits are added
-- Verify LOD system is working for distant entities
+- Add Unit Attributes Trait.
+- Add Ranged Attack Trait for ranged units.
+- Confirm team setup and hostility rules.
 
-### Template not found
+### Animation behavior is missing
 
-- Ensure template is built before use
-- Check that world context is correct
-- Verify entity config asset is loaded
+- Add Unit Animation Trait.
+- Confirm the animation set includes all required states.
+- Confirm the unit also has Instanced Actor Trait.
+
+## Related Docs
+
+- [Creating Units](../guides/creating-units.md)
+- [Combat System](./combat-system.md)
+- [Rendering System](./rendering-system.md)
+- [Mass Animation System](./mass-animation-system.md)

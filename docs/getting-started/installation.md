@@ -6,13 +6,26 @@ sidebar_position: 2
 
 # Installation
 
-After installing the plugin, check if the CommonUI plugin is installed. Usually it should be installed automatically. If not, add it to your project manually.
+After installing the plugin, confirm the required Unreal plugins are available in your project. Once the setup is in place, you can open the included maps and see the core systems running before wiring Pioneer into your own game.
+
+CommonUI is normally enabled automatically by the plugin descriptor, but you can enable it manually if your project does not load it.
+
+## Required Plugins
+
+Pioneer uses:
+
+- CommonUI
+- Niagara
+- Editor Scripting Utilities
+- Unreal Mass Entity module
+
+The included sample modules also use Enhanced Input, UMG, AI, and Navigation features from Unreal Engine.
 
 ## Configuration
 
-### DefaultGame.ini
+Add the following configuration to your project if it is not already present.
 
-Go to the `Config` folder in your project and open the `DefaultGame.ini` file. Add these lines:
+### DefaultGame.ini
 
 ```ini
 [/Script/CommonInput.CommonInputSettings]
@@ -21,8 +34,6 @@ InputData=/Pioneer/Pioneer/Core/Input/CUI_InputData.CUI_InputData_C
 ```
 
 ### DefaultEngine.ini
-
-Open the `DefaultEngine.ini` file in your `Config` folder and add these lines:
 
 ```ini
 [/Script/Engine.Engine]
@@ -42,22 +53,47 @@ DataGatheringMode=Lazy
 RuntimeGeneration=Dynamic
 ```
 
-## First Steps
+## First Launch
 
-After installation, go to the folder `Pioneer → Core → Maps` and open the level `L_DemoMap`. Click on Play in Editor and check if everything works as expected after following the installation steps from above. If you run into any issues, ask us for help on our Discord server.
+1. Restart the editor after installing or enabling the plugin.
+2. Enable plugin content in the Content Browser.
+3. Open `Pioneer/Core/Maps/L_DemoMap` to verify the core setup.
+4. Open `RTSMassBattle/Maps/L_MassBattleDemo` to verify the combat update sample.
+5. Open `TopDownZombieShooter/Maps/L_TDZS_DemoMap` to verify the Actor-Mass Bridge sample.
 
-The main game blueprints (Game Mode, Player Controller, Player Pawn) are located in the `Core → Game` folder. Most of the blueprint logic is attached to the Player Controller as actor components (e.g., `AC_SelectionSystem_Basic`).
+:::note
+The sample maps require a valid navigation mesh. If units do not move or engage correctly, rebuild paths and confirm the navmesh covers the playable area.
+:::
 
-Here's a tutorial video on the first steps and also how to add your own custom meshes (for units and foliage):
+## Main Content Locations
 
-[![Tutorial - First Steps and Adding Your Own Meshes](https://img.youtube.com/vi/0gdzq-maipk/maxresdefault.jpg)](https://www.youtube.com/watch?v=0gdzq-maipk)
+- `Pioneer/Core` - core maps, input, Mass configs, materials, UI, and editor utilities
+- `Pioneer/Units` - combat-ready Mass unit examples
+- `RTSMassBattle` - RTS battle sample module content
+- `TopDownZombieShooter` - top-down shooter sample module content
 
 ## Common Issues
 
-### Game crashes when selecting a character and right-clicking to move
+### Plugin content does not appear
 
-Please check if you have enabled any Mass plugin from Epic Games. Try disabling the Mass plugins and check if the game works now. This system doesn't require any Mass plugins to be activated. If you need a specific Mass plugin for your game and this causes this crash, let us know on Discord. We'll help you fix it.
+Enable plugin content in the Content Browser view options.
+
+### CommonUI input does not work
+
+Confirm the `DefaultGame.ini` CommonInput settings and `DefaultEngine.ini` viewport client setting are present.
+
+### Units do not move
+
+Confirm the navmesh is built, the target location is on navmesh, and the unit config includes Movement Trait.
+
+### Selection or Mass traces do not work
+
+Confirm the collision profiles and `MassObject` / `MassTrace` channels from `DefaultEngine.ini` were added.
+
+### Combat does not start
+
+Confirm units have Unit Attributes Trait, valid team IDs, and hostile targets. For ranged units, confirm Ranged Attack Trait and line-of-sight settings.
 
 ## Getting Help
 
-If you have any questions, feel free to ask in our Discord server: https://discord.com/invite/uMKThEBvDJ
+If you have questions, ask in the Discord server: https://discord.com/invite/uMKThEBvDJ

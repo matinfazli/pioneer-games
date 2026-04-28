@@ -6,107 +6,167 @@ sidebar_position: 2
 
 # Navigation System
 
-The navigation system handles pathfinding and movement for thousands of units simultaneously. It uses Unreal's navmesh for pathfinding and implements sophisticated avoidance algorithms to prevent units from colliding with each other and the environment.
+The Navigation System is responsible for getting large numbers of Mass units from one place to another while keeping movement readable. It combines Unreal navmesh pathfinding with steering, dynamic avoidance, hard separation, ground snapping, smooth orientation, and sleep-state optimization.
 
-## Overview
+When a player issues a move or command order, Pioneer turns that intent into per-unit movement data. From there, Mass processors handle path following, local steering, obstacle avoidance, and final arrival behavior in batches. This keeps movement scalable while still giving units enough local intelligence to flow around each other and the environment.
 
-The navigation system enables units to move intelligently around the game world by combining pathfinding on a navigation mesh with real-time avoidance of obstacles and other units. When you select units and move them to a location, the system calculates optimal paths and handles all the complexity of movement automatically.
+## Key Concepts
+
+- **Navmesh pathfinding** finds a valid route through the level.
+- **Move target** stores the unit's current movement intent, goal, desired speed, and arrival behavior.
+- **Steering** handles local movement near path points and final destinations.
+- **Moving avoidance** helps units in motion avoid each other.
+- **Standing avoidance** helps moving units navigate around idle units and lets idle units adjust without constant jitter.
+- **Hard separation** reduces overlap when units are already too close.
+- **Confinement** keeps units on navigable ground.
+- **Sleep states** reduce processing for idle units until they are commanded, pushed, or approached.
+
+## Architecture
+
+```mermaid
+graph TD
+    A["Move or Command Order"] --> B["Move Target"]
+    B --> C["Navmesh Path"]
+    C --> D["Waypoint Following"]
+    D --> E["Steering"]
+    E --> F["Avoidance Grid"]
+    F --> G["Moving and Standing Avoidance"]
+    G --> H["Hard Separation"]
+    H --> I["Transform and Orientation"]
+```
 
 ## Pathfinding
 
-The system uses the `FindPathToLocationSynchronously` function of Unreal's navigation system. This requires a navigation mesh to be present in the level.
-
-### How Pathfinding Works
+The system uses Unreal's navigation mesh to calculate routes through the level. A valid navmesh must cover the areas where units spawn, move, fight, and regroup.
 
 When a unit needs to move to a destination, it follows this process:
 
-1. **Path Request**: The unit requests a path to the target location
-2. **Route Calculation**: The system looks for the best route taking into account obstacles and terrain
-3. **Waypoint Generation**: The path is broken down into a series of waypoints (3D vectors)
-4. **Sequential Movement**: The unit follows these waypoints one at a time
-5. **Waypoint Completion**: As the unit gets close to each waypoint (within 100 units), it moves on to the next one
-6. **Arrival**: When reaching the final waypoint, the unit slows down and eventually stops
+1. **Path Request** - the unit receives a destination from movement, command, group, or combat logic.
+2. **Route Calculation** - Unreal navigation finds a valid path across the navmesh.
+3. **Waypoint Generation** - the route is broken into path points.
+4. **Sequential Movement** - the unit follows the path points in order.
+5. **Waypoint Completion** - as the unit gets close enough to a point, it advances to the next one.
+6. **Arrival** - near the final destination, steering and slowing behavior settle the unit into place.
 
-The unit adjusts its speed and direction to smoothly move between waypoints throughout the journey.
+Movement Trait settings control how quickly a unit advances through path nodes, how close it must be to count as arriving, and when steering takes over near the final destination.
 
 :::warning Navigation Mesh Required
-
-The pathfinding system requires a navigation mesh to be built in your level. Make sure to build the navmesh before testing unit movement.
-
+The pathfinding system requires a navigation mesh to be built in your level. Make sure the navmesh covers the actual playable space, including ramps, bridges, raised floors, and spawn areas.
 :::
 
 ## Unit Movement
 
-Unit movement combines pathfinding with dynamic avoidance to create natural, responsive movement behavior.
+Unit movement combines pathfinding with dynamic avoidance to create natural, responsive movement behavior. When selecting units and moving them to a location:
 
-### Movement Flow
+- the command or movement component writes a destination
+- each unit receives movement intent
+- path data guides the unit toward the destination
+- steering adjusts local velocity and direction
+- avoidance modifies movement around nearby units and obstacles
+- orientation smoothing keeps the unit facing cleanly while it moves or stands
 
-When selecting units and moving them to a location, these are the things that happen:
+Movement Trait provides the main tuning values:
 
-- For each unit, the navigation mesh calculates a path to the target location
-- The path consists of multiple path points (3D vectors)
-- The unit will move to each of these points in order
-- While moving, units constantly look for nearby obstacles (e.g., other units) and adjust their movement based on it
+- **Max Speed** controls normal movement speed in centimeters per second.
+- **Node Advance Radius** controls how close a unit must get before moving to the next path point.
+- **Close To Path Point** and **Time To Move On** help units recover when they are stuck near the same path node.
+- **Steering Handoff Distance** controls when final steering becomes more important than path following.
+- **Velocity Damping** controls how quickly velocity settles when forces change.
+- **Orientation weights** blend between facing the movement target and facing current velocity.
+
+## Terrain And Multi-Level Movement
+
+Pioneer tracks ground height separately from planar movement so units can move across uneven navmesh and different floor levels. The movement data stores target ground Z, ground normal, stable height, and navmesh lookup state, allowing units to snap smoothly to navigable surfaces instead of sliding through floors or hovering after elevation changes.
+
+This is important for maps with ramps, bridges, raised platforms, or multi-level combat spaces. If a unit appears to move correctly in X/Y but looks wrong vertically, the first thing to check is whether the navmesh fully covers the intended height range.
 
 ## Unit Avoidance
 
-The system implements two types of avoidance systems to prevent collisions:
-
-1. **Moving avoidance** - for units that are in motion
-2. **Standing avoidance** - for stationary units
-
-### How Avoidance Works
-
-The avoidance system uses a spatial grid approach:
-
-- The system divides the game world into a grid of cells
-- When units need to avoid each other, the system looks at:
-  - The nearby cells
-  - The position of other units in these cells
-  - How fast and in which direction units are moving (for moving avoidance)
+Avoidance prevents large selections from collapsing into unreadable piles. Pioneer uses a hierarchical spatial grid so nearby obstacle checks stay practical at scale.
 
 ### Moving Avoidance
 
 For moving units, the system:
-- Calculates where other nearby units are headed
-- Figures out if and when units might get too close to each other
-- Adjusts their paths to prevent collisions
+
+- checks nearby units through the obstacle grid
+- predicts where other moving units are headed
+- estimates whether units may get too close
+- adjusts movement to reduce collisions
+- scales avoidance near path starts and path ends so units do not overreact around goals
+
+Use moving avoidance for armies, squads, enemy waves, and any unit type that shares lanes with many other units.
 
 ### Standing Avoidance
 
 For standing units, the system:
-- Creates a sort of "personal space bubble" around stationary units
-- Helps moving units navigate around these stationary obstacles
+
+- treats idle units as local obstacles
+- gives stationary units a controlled personal space response
+- helps moving units flow around units that have already arrived
+- uses ghost targets so idle units can make small adjustments without constant jitter
+
+Standing avoidance is especially useful in strategy games where some units hold position while others move through or around them.
+
+### Hard Separation
+
+Hard separation is the cleanup pass for physical overlap. Avoidance tries to prevent crowding before it happens; hard separation helps resolve cases where units are already too close because of spawning, tight formations, combat pressure, or command bursts.
+
+Use it as a stability layer, not as the main movement behavior. If units are constantly relying on hard separation, increase formation spacing, tune avoidance, or check formation destinations.
 
 :::tip Performance
-
-The avoidance system uses hierarchical spatial grids for efficient collision detection, allowing thousands of units to avoid each other without significant performance impact.
-
+The avoidance system uses hierarchical spatial grids for efficient nearby-unit checks, allowing large groups to avoid each other without comparing every unit against every other unit.
 :::
+
+## Configuration
+
+Navigation behavior is configured mostly through traits:
+
+- **Movement Trait** controls speed, path-node advancement, steering handoff, velocity damping, standing cooldowns, and facing behavior.
+- **Avoidance Trait** controls moving avoidance, standing avoidance, hard separation, and overlap clamp settings.
+- **Navigation Obstacle Trait** is used when an entity should contribute obstacle behavior.
+
+You will usually tune movement and avoidance together. Faster units need more room to steer; tighter formations need stronger separation but can become noisy if every unit is packed too closely.
 
 ## Performance Considerations
 
-- The navigation system is optimized to handle thousands of units simultaneously
-- Pathfinding is performed asynchronously to avoid frame rate spikes
-- Avoidance calculations use spatial partitioning for efficiency
-- Units that are idle or sleeping use minimal processing resources
+- Avoidance calculations use spatial partitioning for efficiency.
+- Units that are idle or sleeping use minimal processing resources.
+- Sleep and wake processors reduce work for idle units while still waking them when pushed, commanded, or approached.
+- Confinement keeps units inside navigable areas, which prevents expensive recovery behavior from invalid locations.
+- Wider formation spacing usually performs better than sending a large group to one exact point.
 
 ## Troubleshooting
 
 ### Units not moving
 
-- Check that a navigation mesh exists in your level
-- Verify the navmesh is built and covers the areas where units need to move
-- Ensure units have the proper movement traits/components attached
+- Check that a navigation mesh exists in your level.
+- Verify the navmesh is built and covers the areas where units need to move.
+- Ensure units have Movement Trait attached.
+- Check that a command or move target is actually being issued.
 
-### Units colliding with each other
+### Units move but drift off valid areas
 
-- The avoidance system should prevent most collisions
-- If collisions occur, check that the avoidance system is properly configured
-- Verify that unit collision profiles are set correctly
+- Confirm navmesh coverage around the full path, not only the destination.
+- Enable confinement behavior for units that should remain on navigable ground.
+- Check for map geometry or navmesh bounds that leave gaps near ramps, bridges, or platform edges.
+
+### Units collide with each other
+
+- Confirm Avoidance Trait is present.
+- Increase formation spacing if the problem happens immediately after group movement.
+- Check moving and standing avoidance settings.
+- Treat hard separation as a fallback, not the only source of spacing.
 
 ### Performance issues with many units
 
-- The system is optimized for large unit counts, but performance depends on hardware
-- Consider adjusting avoidance grid cell sizes if needed
-- Monitor frame rate using the built-in FPS counter
+- Look for units that are constantly awake, stuck, or compressed into a small space.
+- Use formation layouts instead of sending every unit to one exact point.
+- Keep avoidance radii practical for the unit scale.
+- Monitor frame rate using the built-in FPS counter or Unreal profiling tools.
+
+## Related Docs
+
+- [Movement Commands](../guides/movement-commands.md)
+- [Command System](./command-system.md)
+- [Groups and Formations](./group-formation-system.md)
+- [Entity System](./entity-system.md)

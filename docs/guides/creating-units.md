@@ -6,300 +6,273 @@ sidebar_position: 1
 
 # Creating Units
 
-This guide walks you through creating your own unit types in Pioneer. Units are defined using **Entity Config Assets**, which combine **traits** to give units their capabilities.
+Units in Pioneer are built from **Entity Config Assets**, so you can create new unit types by composing capabilities instead of writing a new gameplay stack every time. Each config combines traits that describe what a Mass entity can do: render, move, avoid, be selected, fight, animate, join bridge combat, or participate in custom game logic.
+
+The fastest way to create a new unit is to duplicate one of the included configs in `Pioneer/Units`, then adjust the mesh, stats, animation set, and combat role. This keeps the proven setup intact while giving you room to build your own roster.
 
 ## Overview
 
-Creating a unit involves:
-1. Creating an Entity Config Asset
-2. Adding traits that define the unit's capabilities
-3. Configuring trait properties (mesh, movement speed, etc.)
-4. Testing and spawning the unit
+Creating a unit usually involves:
 
-Each trait adds specific functionality - you compose traits together to create different unit types.
+1. Create or duplicate an Entity Config Asset.
+2. Add traits for the unit's capabilities.
+3. Configure movement, rendering, selection, combat, and animation values.
+4. Place or spawn the unit in a sample map.
+5. Test selection, movement, combat, death, and UI presentation.
 
-## Step 1: Create an Entity Config Asset
+## Step 1: Create An Entity Config Asset
 
-1. In the Content Browser, right-click in your desired folder
-2. Navigate to **Miscellaneous → Data Asset**
-3. Select **Entity Config Asset**
-4. Name it (e.g., `DA_Soldier`, `DA_Worker`)
+1. In the Content Browser, right-click in your desired folder.
+2. Choose **Miscellaneous > Data Asset**.
+3. Select **Entity Config Asset**.
+4. Name it with a clear unit name, such as `EC_Swordsman`, `EC_Archer`, or `EC_Worker`.
 
-The Entity Config Asset is where you'll define all the traits and properties for your unit type.
+:::tip
+For combat units, duplicate an included config from `Pioneer/Units` first. This is faster and reduces the chance of missing a required trait.
+:::
 
-## Step 2: Add Essential Traits
+## Step 2: Add Core Traits
 
-Open your Entity Config Asset and add traits to the **Traits** array. Here are the essential traits for a basic unit:
+Most player-controllable Mass units use these traits.
 
 ### Instanced Actor Trait
 
-This trait makes your unit renderable and is required for any visible unit.
+This makes the unit visible through instanced static mesh rendering.
 
-**To add:**
-1. Click the **+** button in the Traits array
-2. Select **Instanced Actor Trait**
+Configure:
 
-**Configure:**
-- **Mesh** - Assign a Static Mesh asset for the unit's appearance
-- **Radius** - Collision/avoidance radius (default: 40)
-- **Rotation Correction** - Adjust mesh rotation if needed
-- **Current Animation** - Name of the default animation to play
-- **Animations** - Array of animation data (for vertex animations)
-- **Entity Metadata** - Display name and thumbnail for UI
-
-:::tip
-
-For static meshes, you can use any Static Mesh asset. For animated units, you'll need to set up vertex animations.
-
-:::
+- mesh
+- radius
+- rotation correction
+- default animation token if using manual animation data
+- metadata such as display name and thumbnail
 
 ### Movement Trait
 
-This trait enables pathfinding and movement.
+This enables navmesh movement, steering, path following, orientation, and movement speed configuration.
 
-**To add:**
-1. Add **Movement Trait** to the Traits array
+Configure:
 
-**Configure Movement Parameters:**
-- **Max Speed** - Maximum movement speed
-- **Acceleration** - How quickly the unit reaches max speed
-- **Deceleration** - How quickly the unit stops
-- **Turn Rate** - How quickly the unit can rotate
-
-**Configure Confinement:**
-- **Confinement Settings** - Keeps units within navigable areas
-
-**Configure Standing Steering:**
-- **Standing Behavior** - How stationary units behave
-
-**Configure Orientation:**
-- **Smooth Orientation** - How the unit rotates toward movement direction
-
-:::note
-
-Default movement parameters are usually fine to start with. Adjust them based on your game's feel and requirements.
-
-:::
-
-### Selectable Trait
-
-This trait makes the unit selectable via the UI.
-
-**To add:**
-1. Add **Selectable Trait** to the Traits array
-
-**Configure:**
-- **Mesh** - Selection indicator mesh (optional, can use the same as Instanced Actor)
+- max speed
+- acceleration and deceleration
+- turn behavior
+- confinement settings
+- standing behavior
+- orientation smoothing
 
 ### Avoidance Trait
 
-This trait enables collision avoidance with other units.
+This keeps units from collapsing into each other while moving or standing.
 
-**To add:**
-1. Add **Avoidance Trait** to the Traits array
+Configure:
 
-**Configure:**
-- **Moving Parameters** - Avoidance behavior while moving
-- **Standing Parameters** - Avoidance behavior while stationary
-- **Hard Separation** - Force-based separation from other units
-- **Hard Separation Clamp** - Limits on separation forces
+- moving avoidance
+- standing avoidance
+- hard separation
+- hard separation clamp
 
-:::tip
+### Selectable Trait
 
-Avoidance is essential for units to navigate around each other. Default parameters work well for most cases.
-
-:::
+This lets the selection system include the unit in click and drag selection.
 
 ### LOD Trait
 
-This trait enables dynamic Level of Detail optimization.
+This lets distant units use cheaper processing and rendering behavior. Add it to any unit type that may appear in large numbers.
 
-**To add:**
-1. Add **LOD Trait** to the Traits array
+## Step 3: Add Combat Traits
 
-**Configure:**
-- **LOD Settings** - Map of LOD levels to configuration
-  - **Max** - Full quality (closest)
-  - **Mid** - Medium quality
-  - **Min** - Low quality
-  - **Off** - Culled or minimal processing
+Combat units need **Unit Attributes Trait**.
+
+Configure:
+
+- display name
+- thumbnail
+- max health
+- armor
+- base attack damage
+- base attack range
+- attack cooldown
+- attack windup
+
+Melee units can stop here. Units without Ranged Attack Trait are handled as melee combatants by the combat processors.
+
+### Ranged Attack Trait
+
+Add **Ranged Attack Trait** for archers, catapults, ranged monsters, or any unit that should fire projectiles.
+
+Configure:
+
+- minimum attack range
+- projectile speed
+- impact radius
+- line-of-sight behavior
+- launch and target offsets
+- reposition buffer
+- trajectory type
+- arc height
+- group volley settings
+- projectile mesh, rotation correction, and scale
 
 :::note
-
-LOD is optional but recommended for performance with many units. The system will automatically adjust based on camera distance.
-
+Ranged units still need Unit Attributes Trait. The ranged trait adds projectile behavior; it does not replace health, armor, damage, or team setup.
 :::
 
-## Step 3: Configure Your Unit
+## Step 4: Add Animation
 
-### Basic Configuration
+For the combat update animation flow, use **Unit Animation Trait** with a **Unit Animation Set Asset**.
 
-For a simple unit, you typically need:
+The animation set maps semantic states to baked vertex animation clips:
 
-1. **Instanced Actor Trait** - With a mesh assigned
-2. **Movement Trait** - With movement speed configured
-3. **Selectable Trait** - To make it selectable
-4. **Avoidance Trait** - For collision avoidance
+- Idle
+- Walk
+- Run
+- Charge
+- Attack
+- Death
 
-### Advanced Configuration
+Configure:
 
-For more complex units, you might also add:
+1. Create or duplicate a Vertex Animation Data Asset.
+2. Create or duplicate a Unit Animation Set Asset.
+3. Assign the baked vertex animation data.
+4. Bind all required states.
+5. Set locomotion thresholds.
+6. Add Unit Animation Trait to the Entity Config Asset.
 
-- **LOD Trait** - For performance optimization
-- Custom traits - For game-specific functionality
+See [Mass Animation System](../systems/mass-animation-system.md).
 
-### Example: Basic Soldier Unit
+## Step 5: Add Actor-Mass Bridge Support
 
-Here's a typical configuration for a basic soldier:
+Add **Actor-Mass Bridge Participant Trait** when a Mass unit needs to interact with regular Actor combatants through the bridge.
 
-```
-Entity Config Asset: DA_Soldier
-├── Instanced Actor Trait
-│   ├── Mesh: SM_Soldier
-│   ├── Radius: 40
-│   └── Current Animation: Idle
-├── Movement Trait
-│   ├── Max Speed: 500
-│   ├── Acceleration: 2000
-│   └── Turn Rate: 360
-├── Selectable Trait
-│   └── Mesh: SM_SelectionIndicator
-└── Avoidance Trait
-    └── (Default parameters)
-```
+Use this for:
 
-## Step 4: Vertex Animation (Optional)
+- Mass enemies that fight Actor heroes
+- Mass units that can be targeted by Actor weapons
+- hybrid games where only some combatants are Mass entities
 
-If you want animated units, you'll need to set up vertex animations:
+See [Actor-Mass Bridge](../systems/actor-mass-bridge.md).
 
-### Setting Up Animations
+## Example Configurations
 
-1. In the **Instanced Actor Trait**, expand the **Animations** array
-2. Click **+** to add an animation entry
-3. Configure each animation:
-   - **Name** - Animation identifier (e.g., "Idle", "Walk", "Run")
-   - **Start Frame** - First frame of animation in the vertex animation texture
-   - **End Frame** - Last frame of animation
-   - **Play Rate** - Animation speed multiplier
-   - **Time Offset** - Starting offset for synchronization
+### Melee Soldier
 
-4. Set **Current Animation** to the default animation name
-
-:::warning Experimental Feature
-
-Vertex animation is currently experimental. You'll need to create vertex animation textures from skeletal animations using the Vertex Animation tools in the editor.
-
-:::
-
-## Step 5: Test Your Unit
-
-### Using the Demo Map
-
-1. Open `L_DemoMap` from `Pioneer → Core → Maps`
-2. In your Player Controller or Movement System component, add your Entity Config Asset to the spawnable entity types
-3. Use the spawn system to create units with your config
-4. Test selection and movement
-
-### Spawning Units
-
-You can spawn units programmatically using the Movement System component:
-
-```cpp
-// Get the Movement System component
-UAC_CPP_MovementSystem_Abstract* MovementSystem = 
-    GetComponentByClass<UAC_CPP_MovementSystem_Abstract>();
-
-// Spawn units
-FSpawnedEntityType EntityType;
-EntityType.EntityConfig = YourEntityConfigAsset;
-TArray<FTransform> SpawnTransforms;
-// ... populate spawn transforms ...
-
-MovementSystem->SpawnUnits(EntityType, 10, SpawnTransforms);
+```text
+Entity Config Asset: EC_Swordsman
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- Selectable Trait
+- LOD Trait
+- Unit Attributes Trait
+- Unit Animation Trait
 ```
 
-## Step 6: Create Unit Variations
+### Ranged Archer
 
-You can create variations of units using inheritance:
+```text
+Entity Config Asset: EC_Archer
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- Selectable Trait
+- LOD Trait
+- Unit Attributes Trait
+- Ranged Attack Trait
+- Unit Animation Trait
+```
 
-### Using Parent Configs
+### Bridge Enemy
 
-1. Create a base Entity Config Asset (e.g., `DA_BaseSoldier`)
-2. Create a new Entity Config Asset for the variation (e.g., `DA_FastSoldier`)
-3. In the new asset, set the **Parent** field to the base asset
-4. Add or override traits as needed
+```text
+Entity Config Asset: EC_Walker
+- Instanced Actor Trait
+- Movement Trait
+- Avoidance Trait
+- LOD Trait
+- Unit Attributes Trait
+- Unit Animation Trait
+- Actor-Mass Bridge Participant Trait
+- Game-specific enemy chase trait
+```
 
-**Example:**
-- `DA_BaseSoldier` - Has Movement Trait with speed 500
-- `DA_FastSoldier` - Inherits from `DA_BaseSoldier`, overrides Movement Trait with speed 750
+## Step 6: Test Your Unit
 
-:::tip
+Use the sample that best matches the unit:
 
-Inheritance is powerful for creating unit families. Common traits go in the parent, variations go in children.
+- Use `Pioneer/Core/Maps/L_DemoMap` for movement, selection, spawning, and rendering tests.
+- Use `RTSMassBattle/Maps/L_MassBattleDemo` for RTS combat units.
+- Use `TopDownZombieShooter/Maps/L_TDZS_DemoMap` for bridge-based Actor-versus-Mass enemies.
 
-:::
+Test these behaviors before tuning details:
+
+- spawns at the expected location
+- renders with the correct mesh
+- can be selected if intended
+- moves across navmesh
+- avoids other units
+- attacks valid hostile targets
+- plays Idle, Walk, Run, Attack, Charge, and Death states as expected
+- cleans up after death
+
+## Creating Variations
+
+Entity Config Assets can inherit from parent configs. Use parent configs for common setup and child configs for variants.
+
+Examples:
+
+- `EC_BaseInfantry` defines movement, selection, avoidance, LOD, and animation.
+- `EC_Swordsman` inherits from it and sets melee stats.
+- `EC_Archer` inherits from it and adds ranged attack settings.
+- `EC_EliteArcher` inherits from `EC_Archer` and increases range or damage.
 
 ## Best Practices
 
-### Trait Composition
+- Start from a working included unit config.
+- Keep core traits consistent across unit families.
+- Use Unit Attributes Trait for every combat unit.
+- Add Ranged Attack Trait only to true ranged units.
+- Add Unit Animation Trait when the unit should use semantic combat animation states.
+- Keep projectile impact radius modest until performance has been tested.
+- Use LOD Trait for any high-count unit.
+- Tune avoidance radius and formation spacing together.
 
-- **Start simple** - Add only essential traits first, then add more as needed
-- **Reuse base configs** - Create common base configs and inherit from them
-- **Keep traits focused** - Each trait should add one cohesive set of functionality
+## Troubleshooting
 
-### Performance
+### Unit does not appear
 
-- **Use LOD** - Always add LOD Trait for units that will appear in large numbers
-- **Optimize meshes** - Use efficient meshes with appropriate polygon counts
-- **Limit animations** - Only add animations you actually need
+- Confirm Instanced Actor Trait has a valid mesh.
+- Confirm the Entity Config Asset is assigned to the spawner.
+- Confirm the spawn location is valid.
 
-### Organization
+### Unit does not move
 
-- **Naming convention** - Use clear names like `DA_Soldier`, `DA_Worker`
-- **Folder structure** - Organize configs by unit type or faction
-- **Documentation** - Add comments or metadata to explain special configurations
+- Confirm Movement Trait is present.
+- Confirm the level has built navmesh.
+- Confirm the target location is on navmesh.
 
-## Common Issues
+### Unit does not attack
 
-### Unit not appearing
+- Confirm Unit Attributes Trait is present.
+- Confirm team IDs are non-zero and hostile.
+- Confirm targets are within acquisition or chase range.
 
-- **Check mesh assignment** - Ensure Instanced Actor Trait has a mesh assigned
-- **Verify spawning** - Check that spawn system is properly configured
-- **Check navigation mesh** - Units need a navmesh to appear correctly
+### Ranged unit does not fire
 
-### Unit not moving
+- Confirm Ranged Attack Trait is present.
+- Check minimum range and line-of-sight settings.
+- Confirm projectile speed and trajectory settings are valid.
 
-- **Verify Movement Trait** - Ensure Movement Trait is added
-- **Check movement parameters** - Verify speed and acceleration are set
-- **Navigation mesh** - Ensure navmesh exists and is built
+### Animation state is wrong
 
-### Unit not selectable
+- Confirm Unit Animation Trait references a valid Unit Animation Set Asset.
+- Confirm all required states are bound.
+- Check locomotion thresholds and attack/death durations.
 
-- **Add Selectable Trait** - Ensure Selectable Trait is in the config
-- **Check selection system** - Verify selection system component is set up
+## Related Docs
 
-### Performance issues
-
-- **Add LOD Trait** - LOD helps with many units
-- **Optimize mesh** - Use lower-poly meshes for distant units
-- **Reduce animation complexity** - Simpler animations perform better
-
-## Next Steps
-
-Now that you can create units:
-
-- Learn about the [Entity System](../systems/entity-system.md) to understand traits and fragments
-- Explore [Movement Commands](./movement-commands.md) to control units
-- Review the [Rendering System](../systems/rendering-system.md) for visual customization
-
-## Summary
-
-Creating units in Pioneer is a composition-based process:
-
-1. **Create** an Entity Config Asset
-2. **Add traits** for capabilities (rendering, movement, selection, etc.)
-3. **Configure** trait properties (mesh, speed, etc.)
-4. **Test** by spawning and using the unit
-5. **Iterate** and create variations using inheritance
-
-The trait system makes it easy to mix and match capabilities to create diverse unit types without writing custom code for each one.
+- [Entity System](../systems/entity-system.md)
+- [Combat System](../systems/combat-system.md)
+- [Mass Animation System](../systems/mass-animation-system.md)
+- [Rendering System](../systems/rendering-system.md)
+- [Spawning System](../systems/spawning-system.md)

@@ -1,267 +1,167 @@
 ---
-title: Movement Commands
-description: How to issue and customize movement commands for units in Pioneer
+title: Commands And Movement
+description: How to issue movement and combat commands for units in Pioneer
 sidebar_position: 2
 ---
 
-# Movement Commands
+# Commands And Movement
 
-Movement commands allow you to direct selected units to move to specific locations. The system handles pathfinding, formation preservation, and obstacle avoidance automatically.
+Pioneer's command layer turns basic right-click movement into a full RTS-style order system. Selected units and groups can move, attack move, attack, hold position, stop, patrol, follow, retreat, and charge.
+
+Commands can replace current orders or queue behind them, giving players the control they expect from strategy games without requiring you to build that command framework from scratch.
 
 ## Overview
 
-When you issue a movement command:
-1. **Selected units** receive the command
-2. **Pivot point** is calculated from all selected units' positions
-3. **Relative positioning** maintains unit formation
-4. **Pathfinding** calculates routes for each unit
-5. **Movement** happens automatically with avoidance
+When a command is issued:
 
-The system is designed to feel natural and responsive while handling thousands of units efficiently.
+1. The current selection, group, or explicit entity list is resolved.
+2. The command data is built with a type, target, and behavior settings.
+3. The apply policy decides whether to replace, queue, interrupt, or cancel commands.
+4. The command subsystem writes active or queued command state to the affected entities.
+5. Movement, patrol, follow, combat, or charge processors execute the command.
 
 ## Basic Usage
 
-### Selecting and Moving Units
+### Move
 
-The simplest way to move units:
+Select units and issue a ground move command. The selected units pathfind across the navmesh, avoid each other, and stop near their assigned destinations.
 
-1. **Select units** - Left-click or drag-select units
-2. **Right-click** on the ground where you want them to move
-3. **Units move** - They automatically pathfind and avoid obstacles
+### Attack Move
 
-:::tip
+Attack move sends units toward a ground location while allowing them to acquire and fight hostile units along the way. This is useful for advancing armies without requiring precise target clicks.
 
-Units maintain their relative formation when moving. If you select a group and right-click, they'll move to the new location while preserving their spacing.
+### Attack
 
+Attack commands target a specific hostile Mass entity. The combat system handles target approach, melee or ranged engagement, projectile behavior, damage, and death.
+
+### Hold Position
+
+Hold position keeps units from advancing while still allowing them to fight when enemies enter range.
+
+### Patrol
+
+Patrol moves units between two locations. Use this for guards, lane defense, and repeatable map control.
+
+### Follow
+
+Follow keeps selected units near an Actor or Mass entity target. This is useful for escorts, squads, or units guarding a moving objective.
+
+### Retreat
+
+Retreat moves units away from a threat location by a configured distance.
+
+### Charge
+
+Charge sends units aggressively toward a location and can apply a speed multiplier while the command is active.
+
+## Command Queue
+
+Queued commands allow players to plan ahead:
+
+1. Issue the first command normally.
+2. Hold your queue modifier.
+3. Issue additional commands.
+4. Units execute each command in order as previous commands complete.
+
+Good uses for queued commands:
+
+- waypoint movement
+- move into attack move
+- patrol setup
+- reposition then hold
+- retreat after an attack
+
+:::note
+The queue is bounded per entity so large battles stay predictable in memory and performance.
 :::
 
-### How Formation Works
+## Formations And Groups
 
-When you issue a move command to multiple units:
+Movement works best with groups and formations when commanding many units. A grouped selection can receive formation offsets so members move into a readable shape around the command target instead of collapsing into one point.
 
-- The system calculates a **pivot point** (average position of all selected units)
-- Each unit's target is calculated **relative to this pivot**
-- This preserves the formation - units don't all converge to the same point
-- Units pathfind individually but maintain their relative positions
+Use [Groups and Formations](../systems/group-formation-system.md) for control groups, recall slots, merge, ungroup, and formation setup.
 
-**Example:**
-- You select 10 units in a line formation
-- Right-click 500 units away
-- Units move to the new location, maintaining their line formation
+## Player Controller Workflow
+
+Most projects issue commands from Player Controller components:
+
+- Selection component decides which units are selected.
+- Command component issues orders.
+- Command targeting state handles commands that need a second click.
+- Group and formation components adjust selected groups.
+- UI components show command cards and command feedback.
+
+The RTS Mass Battle sample demonstrates this complete workflow.
 
 ## Programmatic Usage
 
-### Using the Movement System Component
-
-The easiest way to issue movement commands programmatically is through the Movement System component:
+Use a component when issuing common commands from player input or UI.
 
 ```cpp
-// Get the Movement System component from Player Controller
-UAC_CPP_MovementSystem_Abstract* MovementSystem = 
-    PlayerController->GetComponentByClass<UAC_CPP_MovementSystem_Abstract>();
-
-// Issue move command to selected units
-FVector TargetLocation = FVector(1000, 2000, 0);
-MovementSystem->MoveUnits(TargetLocation);
+// Example: issue a queued move through a command component.
+CommandSystem->IssueMoveToSelection(TargetLocation, true);
 ```
 
-### Using the Spawner Subsystem Directly
-
-You can also use the Spawner Subsystem directly:
+Use the command subsystem when issuing commands from C++ systems, AI directors, or game rules.
 
 ```cpp
-// Get the Spawner Subsystem
-USpawnerSubsystem* SpawnerSubsystem = 
-    World->GetSubsystem<USpawnerSubsystem>();
+// Example: issue command data to known entities.
+FUnitCommandData Command;
+Command.Type = EUnitCommandType::AttackMove;
+Command.PrimaryLocation = TargetLocation;
+Command.bAggressiveWhileMoving = true;
 
-// Issue move command
-FVector TargetLocation = FVector(1000, 2000, 0);
-SpawnerSubsystem->IssueMoveUnits(TargetLocation);
+CommandSubsystem->IssueCommandToEntities(Entities, Command, ECommandApplyPolicy::Replace);
 ```
 
-:::note
+## Configuration
 
-Movement commands only affect **selected units**. Make sure units are selected before issuing commands, or the command will have no effect.
+Tune command behavior through:
 
-:::
+- input actions and mapping contexts
+- command card data assets
+- command target kind
+- cursor preset tags
+- movement trait values
+- unit combat traits
+- group and formation settings
 
-## How Movement Commands Work
+## Performance Considerations
 
-### Command Processing Flow
+Issue commands in batches to selections or groups. Avoid per-frame command spam from UI code. Once a command is issued, let the Mass processors execute it instead of manually steering each entity from Blueprint.
 
-1. **Command Issued** - `MoveUnits()` or `IssueMoveUnits()` is called with target location
-2. **Selection Query** - System finds all entities with `FUnitSelectedTag`
-3. **Pivot Calculation** - Average position of all selected units is computed
-4. **Command Assignment** - Each selected unit receives a `FMoveCommandFragment` with:
-   - Target location (relative to pivot)
-   - Distance from pivot
-   - Forward vector direction
-   - Command status
-5. **Pathfinding** - Each unit calculates its path to its target
-6. **Movement** - Units move along their paths with avoidance
+## Troubleshooting
 
-### Move Command Fragment
+### Units ignore commands
 
-Each unit stores its movement command in a `FMoveCommandFragment`:
+- Confirm units are selected or included in the target group.
+- Confirm required traits are present.
+- Confirm target locations are on navmesh.
+- Confirm the current game phase allows commands. For example, deployment phases may gate runtime behavior.
 
-- **Status** - `Added` (new command) or `Running` (in progress)
-- **Target Location** - Final destination for the unit
-- **Mouse Position** - Original click position (for reference)
-- **Distance** - Distance from pivot point
-- **Forward Vector** - Direction from pivot to target
-- **bHasActiveCommand** - Whether command is active
+### Queued commands disappear
 
-The fragment is automatically managed by the system - you typically don't need to interact with it directly.
+- Replace, Stop, and Cancel All policies clear queued work.
+- Some commands may complete immediately if their target is invalid.
+- The per-entity queue has a maximum size.
 
-## Customization
+### Attack commands fail
 
-### Movement Parameters
+- Confirm the target is hostile.
+- Confirm both units have valid team data.
+- Confirm the attacking unit has Unit Attributes Trait.
+- Confirm the target is alive and resolvable.
 
-Movement behavior is controlled by the **Movement Trait** on your entity config:
+### Formation movement looks crowded
 
-- **Max Speed** - How fast units move
-- **Acceleration** - How quickly units reach max speed
-- **Deceleration** - How quickly units stop
-- **Turn Rate** - How quickly units can rotate
+- Increase formation spacing.
+- Increase avoidance radius.
+- Use Loose formation for mixed or high-count selections.
+- Confirm there is enough navmesh around the target.
 
-Adjust these in your Entity Config Asset to change how units respond to movement commands.
+## Related Docs
 
-### Formation Behavior
-
-The system automatically preserves formations, but you can influence this:
-
-- **Unit spacing** - Controlled by avoidance radius in Avoidance Trait
-- **Formation shape** - Determined by initial selection positions
-- **Relative positioning** - Maintained automatically during movement
-
-:::tip
-
-For tighter formations, reduce the avoidance radius. For looser formations, increase it.
-
-:::
-
-## Advanced Usage
-
-### Custom Movement Logic
-
-If you need custom movement behavior, you can:
-
-1. **Create custom processors** - Process `FMoveCommandFragment` with your own logic
-2. **Modify command data** - Access and modify move command fragments directly
-3. **Add custom tags** - Use tags to mark units for special movement behavior
-
-### Movement Tasks
-
-The system uses a task-based approach internally:
-- `MoveTaskProcessor` - Handles pathfinding and initial movement setup
-- `SteerToMoveCommandGoalProcessor` - Handles steering toward the goal
-- Other processors handle avoidance, orientation, etc.
-
-You can extend this system by creating custom processors that work with movement commands.
-
-## Best Practices
-
-### Issuing Commands
-
-- **Batch commands** - Issue commands once rather than repeatedly
-- **Wait for completion** - Don't issue new commands while units are still moving (unless intentional)
-- **Consider selection** - Only selected units respond to commands
-
-### Performance
-
-- **Large groups** - The system handles hundreds of units efficiently
-- **Formation preservation** - Automatic, no performance cost
-- **Pathfinding** - Cached and optimized per unit
-
-### User Experience
-
-- **Visual feedback** - Consider showing move indicators where players click
-- **Command queuing** - The system supports one active command per unit
-- **Cancellation** - New commands automatically replace old ones
-
-## Common Issues
-
-### Units not moving
-
-**Possible causes:**
-- Units not selected - Verify units have `FUnitSelectedTag`
-- No navigation mesh - Ensure navmesh exists and is built
-- Invalid target location - Check that target is on navigable surface
-- Missing Movement Trait - Ensure units have Movement Trait in their config
-
-**Solutions:**
-- Verify selection system is working
-- Build navigation mesh in your level
-- Check target location is valid
-- Verify entity config has Movement Trait
-
-### Units moving to wrong location
-
-**Possible causes:**
-- Formation calculation issue
-- Pivot point calculation error
-- Pathfinding failure
-
-**Solutions:**
-- Check that multiple units are selected correctly
-- Verify navigation mesh covers the target area
-- Check unit positions are valid
-
-### Units not maintaining formation
-
-**Possible causes:**
-- Avoidance forcing units apart
-- Pathfinding obstacles
-- Units too close together
-
-**Solutions:**
-- Adjust avoidance parameters
-- Ensure clear paths to destination
-- Increase unit spacing if needed
-
-### Performance issues with many units
-
-**Possible causes:**
-- Too many pathfinding requests at once
-- Complex navigation mesh
-- Large number of selected units
-
-**Solutions:**
-- The system handles this automatically with time-slicing
-- Optimize navigation mesh complexity
-- Consider splitting large groups into smaller commands
-
-## Integration with Selection
-
-Movement commands work seamlessly with the selection system:
-
-1. **Selection** - Units are marked with `FUnitSelectedTag` when selected
-2. **Command** - Movement command queries for selected units
-3. **Execution** - Only selected units receive and execute the command
-4. **Deselection** - Units can be deselected, but active commands continue
-
-:::note
-
-Deselecting units doesn't cancel their movement commands. They'll continue to their destination even if deselected.
-
-:::
-
-## Next Steps
-
-Now that you understand movement commands:
-
-- Learn about the [Navigation System](../systems/navigation-system.md) to understand pathfinding
-- Explore [Creating Units](./creating-units.md) to configure movement parameters
-- Review the [Entity System](../systems/entity-system.md) to understand fragments and tags
-
-## Summary
-
-Movement commands in Pioneer are simple to use but powerful:
-
-- **Select and right-click** - Basic usage is straightforward
-- **Formation preservation** - Automatic and efficient
-- **Pathfinding** - Handled automatically
-- **Avoidance** - Built-in collision avoidance
-- **Scalable** - Works with thousands of units
-
-The system abstracts away the complexity, letting you focus on your game's unique mechanics while providing reliable, performant unit movement.
+- [Command System](../systems/command-system.md)
+- [Combat System](../systems/combat-system.md)
+- [Groups and Formations](../systems/group-formation-system.md)
+- [Navigation System](../systems/navigation-system.md)

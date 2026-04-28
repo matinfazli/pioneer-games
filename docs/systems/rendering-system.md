@@ -6,169 +6,139 @@ sidebar_position: 3
 
 # Rendering System
 
-The rendering system optimizes performance through instanced rendering and LOD (Level of Detail) management. It enables rendering thousands of units efficiently while maintaining visual quality through dynamic LOD adjustments and support for vertex animations.
+The Rendering System is what lets Pioneer put large armies on screen without treating every unit like a full Actor. Units with the same mesh are batched through instanced static mesh components, then transforms, LOD state, highlighting, and animation data are updated in batches.
 
-## Overview
+For strategy games, rendering is often the difference between a prototype that works with a few units and a game that still feels stable with thousands. Pioneer keeps the visual representation lightweight: Mass entities hold the simulation data, while the rendering system turns that data into efficient instanced mesh updates.
 
-The rendering system uses **Instanced Static Mesh (ISM)** components to batch render thousands of units in a single draw call. Instead of creating individual actors for each unit, the system groups units by their mesh type and renders them as instances, dramatically reducing CPU and GPU overhead.
+## Key Concepts
 
-The system automatically manages:
-- **Instance creation and lifecycle** - Units are added/removed from ISM components as needed
-- **Transform updates** - Position, rotation, and scale updates are batched and applied efficiently
-- **LOD management** - Units automatically use appropriate detail levels based on camera distance
-- **Vertex animations** - Animated meshes are supported through vertex animation textures
+- **Instanced Static Mesh rendering** draws many copies of the same mesh efficiently.
+- **Instance data** stores each unit's transform, mesh reference, animation token, instance index, and rendering state.
+- **Instancing host** owns the runtime ISM components created for unit meshes.
+- **LOD** reduces work for distant or less important units.
+- **Selection highlighting** can be mirrored through a dedicated instance path instead of separate per-unit Actors.
+- **Vertex Animation Textures** store baked animation data for GPU-driven animation.
+- **Unit Animation Sets** map gameplay states such as Idle, Walk, Run, Attack, and Death to baked clips.
 
-## Instanced Static Mesh (ISM) Rendering
+## Architecture
 
-### How ISM Works
+```mermaid
+graph TD
+    A["Entity Config Asset"] --> B["Instanced Actor Trait"]
+    B --> C["Instance Data"]
+    C --> D["Instancing Subsystem"]
+    D --> E["ISM Components"]
+    F["LOD Trait"] --> G["LOD Processor"]
+    G --> C
+    H["Unit Animation Trait"] --> I["Animation State"]
+    I --> C
+    C --> J["Rendered Units"]
+```
 
-The rendering system uses Unreal Engine's `InstancedStaticMeshComponent` to render multiple copies of the same mesh efficiently. The `InstancingSubsystem` manages one ISM component per unique mesh type.
+## Instanced Rendering
 
-**Key Benefits:**
-- **Single draw call** per mesh type, regardless of unit count
-- **Reduced CPU overhead** - No per-unit actor overhead
-- **Efficient GPU batching** - All instances rendered together
-- **Scalable** - Can handle 10,000+ units with stable performance
+Instanced rendering groups units by mesh and renders them as instances. This avoids the cost of a full Actor and component hierarchy for every unit.
 
-### Instance Management
+At runtime, the instancing subsystem creates or reuses one instanced component per unique mesh. Entities store their mesh, rotation correction, mesh scale, animation token, and instance index. The transform processor writes batched transform updates into the subsystem, which flushes them to the rendering components at the right point in the Mass processing frame.
 
-Each unit is assigned an instance index when spawned. The system tracks:
-- **Instance transforms** - Position, rotation, and scale for each unit
-- **Animation data** - Vertex animation parameters stored in custom data
-- **Previous transforms** - Used for motion vectors and smooth transitions
+Benefits:
 
-When units are removed, their instances are hidden by scaling to zero rather than being deleted immediately, which is more efficient for frequent spawn/despawn operations.
+- fewer draw calls per mesh type
+- lower CPU overhead
+- batched transform updates
+- efficient hiding and cleanup for removed units
+- practical rendering for large unit counts
 
-:::tip Performance Tip
+Pioneer hides finalized units by scaling the instance down instead of turning every removal into costly component churn. The subsystem also keeps a hit-result lookup from ISM component and instance index back to the Mass entity, which is what lets selection and targeting resolve clicked units.
 
-The system uses GPU-based LOD selection (`bUseGpuLodSelection = true`), which offloads LOD calculations to the GPU for better CPU performance.
+## Dynamic LOD
 
-:::
+LOD helps distant units use less processing and rendering work. The system classifies units into **Max**, **Mid**, **Min**, and **Off** levels based on camera distance, screen-edge distance, and whether the unit is inside or near the camera frustum.
 
-## Dynamic LOD System
+Use LOD Trait on high-count units, especially in RTS battles and wave-based games.
 
-The LOD (Level of Detail) system automatically adjusts the processing and rendering quality of units based on their distance from the camera. This ensures that distant units use fewer resources while maintaining visual quality for nearby units.
-
-### LOD Levels
-
-The system uses four processing LOD levels:
-
-- **Max** - Full processing and rendering quality (closest units)
-- **Mid** - Reduced processing, full rendering quality
-- **Min** - Minimal processing, reduced rendering quality
-- **Off** - No processing (units are culled or use minimal resources)
-
-### How LOD is Determined
-
-LOD levels are calculated based on:
-- **Camera distance** - Units farther from the camera use lower LOD
-- **Viewport position** - Units near screen edges may use lower LOD
-- **Performance targets** - System may adjust LOD to maintain frame rate
-
-The `FProcessingLODFragment` stores the current LOD level for each unit and provides helper functions to scale processing values based on distance.
-
-### LOD Impact on Systems
-
-Different systems respect LOD levels differently:
-
-- **Navigation** - Lower LOD units may skip some avoidance calculations
-- **Rendering** - Lower LOD units may use simpler shaders or fewer animation frames
-- **Processing** - Lower LOD units are processed less frequently or with reduced accuracy
-
-:::note
-
-The LOD system is designed to be transparent to gameplay - units at lower LOD levels still function correctly, just with reduced visual fidelity and processing overhead.
-
-:::
+LOD levels can be used by other systems as a quality signal. For example, nearby units can receive full processing, while distant or offscreen units can reduce update cost. The LOD fragment also exposes a distance alpha that systems can use to scale work gradually.
 
 ## Vertex Animation
 
-Pioneer supports vertex animation for units, allowing you to use animated meshes without traditional skeletal animation. This is more efficient for large numbers of units since vertex animations are GPU-based.
+Pioneer supports baked vertex animation so Mass units can animate without skeletal components on every unit. Animation data is stored in textures and driven through instance data.
 
-### How Vertex Animation Works
+Each instance stores the current animation name, frame range, play rate, time offset, previous animation, and transition duration. Animation updates are only queued when the target animation changes, which keeps the common case cheap.
 
-Vertex animations are stored as **Vertex Animation Textures (VAT)** - textures that encode vertex positions for each frame of animation. The shader reads these textures to animate the mesh vertices directly on the GPU.
+The combat update adds a higher-level Mass animation flow through Unit Animation Set Assets. These map semantic states to baked clips:
 
-**Animation Data Structure:**
-- **Start Frame / End Frame** - Defines the animation range
-- **Play Rate** - Controls animation speed
-- **Time Offset** - Allows synchronization between units
+- Idle
+- Walk
+- Run
+- Charge
+- Attack
+- Death
 
-### Animation Blending
-
-The system supports smooth animation transitions through crossfading:
-- **Transition Duration** - Configurable blend time between animations
-- **Automatic Play Rate Jitter** - Small random variations prevent units from animating in perfect sync
-
-### Creating Vertex Animations
-
-Vertex animations are created from skeletal animations using the Vertex Animation tools in the editor. The system converts animation sequences into texture data that can be used by the rendering system.
-
-:::warning Experimental Feature
-
-Vertex animation is currently an experimental feature and may change in future updates. The API and workflow may be adjusted based on feedback.
-
-:::
-
-## Performance Considerations
-
-### Batch Updates
-
-The rendering system batches all updates to minimize render thread overhead:
-- **Transform updates** are queued and flushed once per frame
-- **Animation updates** are batched together
-- **Single render state update** per ISM component per frame
-
-### Thread Safety
-
-The system is designed for multi-threaded access:
-- **Update queuing** is thread-safe - worker threads can queue updates
-- **Flushing** happens on the game thread after all processing is complete
-- **Critical sections** protect pending update arrays
-
-### Memory Management
-
-- ISM components are created on-demand per mesh type
-- Hidden instances (scaled to zero) are reused rather than deleted
-- Components are automatically cleaned up when no longer needed
+See [Mass Animation System](./mass-animation-system.md) for the state-driven workflow.
 
 ## Configuration
 
-### ISM Component Settings
+### Instanced Actor Trait
 
-The `CustomISMComponent` is configured with optimized defaults:
-- **GPU LOD selection** enabled
-- **Conservative bounds** for better culling
-- **Motion vectors** enabled (previous transforms stored)
-- **Collision disabled** (handled separately by navigation system)
-- **Custom data floats** for animation parameters
+Use this trait on any high-count unit. Configure:
 
-### LOD Configuration
+- **Mesh** for the unit's rendered static mesh.
+- **Rotation Correction** when the mesh's authored forward direction does not match gameplay forward.
+- **Mesh Scale** for visual scale without changing every spawn transform.
+- **Radius** for systems that need an approximate unit footprint.
 
-LOD thresholds and distances can be configured through the `LODSubsystem`. Adjust these values based on your game's camera setup and performance targets.
+### LOD Trait
+
+Use this trait on units that appear in meaningful numbers. Configure distance thresholds per LOD level so the unit stays detailed near the camera and cheaper farther away.
+
+Start conservative: make sure gameplay behavior looks correct first, then tighten LOD distances after testing real battle sizes.
+
+### Animation Assets
+
+Configure animation through:
+
+- Vertex Animation Data Assets for baked animation data.
+- Unit Animation Set Assets for state-to-clip bindings.
+- Unit Animation Trait for connecting the animation set to an entity config.
+
+## Performance Considerations
+
+- Reuse meshes and materials where possible so instances batch cleanly.
+- Add LOD Trait to any unit type that appears in large numbers.
+- Keep animation sets focused and avoid unnecessary high-cost visual effects on every unit.
+- Hide or recycle instances instead of spawning Actor equivalents for large crowds.
+- Test with representative unit counts, not only small samples.
+- Use a small number of mesh/material combinations for mass armies when possible; each unique mesh needs its own instancing component.
 
 ## Troubleshooting
 
-### Units not rendering
+### Units do not render
 
-- Verify that units have a valid `UStaticMesh` assigned in their instance data
-- Check that the `InstancingSubsystem` is properly initialized
-- Ensure units have valid instance indices
+- Confirm Instanced Actor Trait has a valid static mesh.
+- Confirm the entity was spawned successfully.
+- Confirm the instancing subsystem is active in the world.
 
-### Performance issues with many units
+### Selection or targeting cannot click a unit
 
-- Check LOD system is working correctly - distant units should use lower LOD
-- Verify that units are being batched correctly (one ISM per mesh type)
-- Monitor instance count per ISM component - very high counts may need splitting
+- Confirm the unit is rendered through the instancing system.
+- Confirm the instance was registered with the instancing subsystem.
+- Confirm the unit also has the selection or targeting traits needed by your workflow.
 
-### Animation not playing
+### Units render but do not animate
 
-- Verify vertex animation data asset is properly configured
-- Check that animation frames are within valid range
-- Ensure custom data is being written correctly to ISM instances
+- Confirm the unit has Unit Animation Trait.
+- Confirm the Unit Animation Set Asset resolves all required states.
+- Confirm the baked Vertex Animation Data Asset has valid frame ranges.
 
-### Units appearing/disappearing
+### Performance drops with many units
 
-- This may be LOD culling - units at very low LOD may be culled
-- Check camera distance and LOD thresholds
-- Verify instance visibility flags are set correctly
+- Confirm LOD Trait is present.
+- Reduce mesh or material complexity.
+- Reuse meshes across many units.
+- Reduce per-attack VFX or UI feedback in large battles.
+
+## Related Docs
+
+- [Entity System](./entity-system.md)
+- [Mass Animation System](./mass-animation-system.md)
+- [Creating Units](../guides/creating-units.md)
