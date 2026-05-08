@@ -37,6 +37,21 @@ The animation processor chooses locomotion states from movement speed, then high
 
 Unit Animation Set Assets are expected to resolve the required semantic states so the runtime can use consistent state names across different unit types.
 
+## Architecture
+
+```mermaid
+graph TD
+    A["Anim Sequences"] --> B["Vertex Animation Data Asset"]
+    B --> C["Unit Animation Set Asset"]
+    C --> D["Unit Animation Trait"]
+    D --> E["Mass Animation Fragments"]
+    F["Movement Speed"] --> G["Animation State Processor"]
+    H["Combat Events"] --> G
+    I["Death Tags"] --> G
+    G --> J["Instance Animation Token"]
+    J --> K["Instanced Rendering"]
+```
+
 ## Usage
 
 To set up a Mass unit with the new animation flow:
@@ -105,6 +120,28 @@ For large battles:
 - Avoid excessive high-cost VFX on every attack event.
 
 ## Troubleshooting
+
+### Animation To Texture reports a LightMap UV conflict
+
+If the bake prints this warning:
+
+```text
+Invalid StaticMesh UVChannel: 1. Already used by LightMap
+```
+
+the Vertex Anim Data Asset is trying to store animation data in the same UV channel the static mesh uses for generated lightmaps. The VAD defaults to UV Channel `1`, so meshes with lightmap destination index `1` need a different free channel for animation data.
+
+Use the included editor utility:
+
+1. In the Content Browser, right-click the static mesh and choose **Copy Object Path**.
+2. Open `/Pioneer/Pioneer/Core/AnimToTexture/BP_AddUVChannelToMesh`.
+3. Paste the copied path into **AssetPath**.
+4. Leave **LODIndex** at `0` unless baking another LOD.
+5. Click **Run** to add another UV channel to the static mesh.
+6. Open the Vertex Anim Data Asset and set **UVChannel** to the new free channel, usually `2` when lightmaps are using channel `1`.
+7. Save the static mesh and VAD, then run Animation To Texture again.
+
+Enable **Show Plugin Content** in the Content Browser if the utility asset is hidden.
 
 ### Unit stays idle
 

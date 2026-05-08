@@ -107,6 +107,28 @@ After this step, confirm:
 - the static mesh now uses the generated material instances
 - every required state animation is present in the VAD
 
+### Optional: Fix UV Channel Conflicts
+
+The generated VAD uses UV Channel `1` by default for vertex animation data. If the static mesh also uses UV Channel `1` for generated lightmaps, the bake fails with:
+
+```text
+Invalid StaticMesh UVChannel: 1. Already used by LightMap
+```
+
+Before running Animation To Texture, add a free UV channel and point the VAD at it:
+
+1. In the Content Browser, right-click the static mesh and choose **Copy Object Path**.
+2. Open the editor utility at `/Pioneer/Pioneer/Core/AnimToTexture/BP_AddUVChannelToMesh`.
+3. Paste the copied path into **AssetPath**.
+4. Leave **LODIndex** at `0` unless you are baking another static mesh LOD.
+5. Click **Run** to add another UV channel to the static mesh.
+6. Open `VAD_<UnitName>` and set **UVChannel** to the new free channel, usually `2` when lightmaps are using channel `1`.
+7. Save the static mesh and VAD.
+
+:::tip
+If you cannot see the utility asset, enable **Show Plugin Content** in the Content Browser.
+:::
+
 ## Step 5: Run Animation To Texture
 
 Click:
@@ -275,6 +297,7 @@ For units that share the same mesh and animation set, duplicate or inherit from 
 - Check the Output Log for the detailed bake error.
 - Confirm the Skeletal Mesh, Static Mesh, and animation list are set on the generated VAD.
 - Confirm the source static mesh has valid material slots.
+- If the log says `Invalid StaticMesh UVChannel: 1. Already used by LightMap`, run `/Pioneer/Pioneer/Core/AnimToTexture/BP_AddUVChannelToMesh`, then set the VAD **UVChannel** to a free channel such as `2`.
 
 ### Unit does not appear
 
