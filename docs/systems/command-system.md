@@ -100,6 +100,19 @@ By default the queue is intentionally small. The current command data supports a
 The queue is intentionally bounded. This keeps per-entity memory predictable when thousands of units are active.
 :::
 
+## Command Priority And Combat Autonomy
+
+Pioneer separates manual command intent from automatic combat reactions. Normal `Replace` and `Interrupt` commands clear stale combat targets, so a new move or attack order takes control immediately. `Queue` keeps the current command and combat state intact until the queued command becomes active.
+
+Combat autonomy depends on the active command:
+
+- **Move** and **Follow** use defensive movement. Units continue toward the command destination and may only fight immediate threats, such as enemies in range, enemies in close contact, or attackers that recently damaged them. They do not chase defensive targets.
+- **Attack Move**, **Patrol**, and **Charge** use aggressive movement. Units may acquire targets, chase enemies, and temporarily steer through combat movement while the command is active.
+- **Attack** uses the explicit target from the command. A new attack command immediately replaces the previous target.
+- **Hold Position** attacks enemies in range but does not chase.
+- **Retreat** suppresses combat targeting while the retreat order is active.
+
+This keeps normal movement responsive without making units ignore nearby danger.
 ## Groups And Commands
 
 Commands can be issued to groups as well as raw selections. When group formation state exists, move-like commands can be split into per-member destinations so the group arrives in a coherent shape instead of collapsing into one point.

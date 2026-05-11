@@ -17,6 +17,7 @@ Combat is intentionally built as data on top of the existing Mass unit stack. Th
 - **Unit attributes** define health, armor, attack damage, attack range, melee cooldown, and attack windup.
 - **Teams** determine hostility. Units with different non-zero team IDs can fight each other.
 - **Target acquisition** finds eligible enemies near a unit and keeps combat from requiring manual target assignment every frame.
+- **Combat autonomy** controls whether a command can auto-acquire, chase, or only defend against immediate threats.
 - **Melee engagement** handles close-range approach, windup, hit timing, cooldown, and damage.
 - **Ranged engagement** handles minimum range, line of sight, projectile settings, and optional volley timing.
 - **Projectiles** simulate travel and can apply single-target or radius damage on impact.
@@ -43,6 +44,18 @@ Melee combat uses the unit's base attack range, damage, cooldown, and windup. A 
 
 Attack windup is important because it gives animation, audio, and combat readability a place to line up. A unit can start an attack, play the attack state, and then apply damage at the intended moment instead of instantly removing health the frame it enters range.
 
+## Combat Autonomy
+
+Combat behavior is driven by the active command:
+
+- **Idle units** can auto-acquire enemies and chase within the configured engagement rules.
+- **Move and Follow** use defensive combat. Units may attack immediate threats, but they keep their movement destination and do not chase targets.
+- **Attack Move, Patrol, and Charge** use aggressive combat. Units may acquire and chase enemies while advancing.
+- **Attack** locks onto the explicitly commanded target and replaces any previous target.
+- **Hold Position** attacks enemies in range without chasing.
+- **Retreat** clears and suppresses combat targets while active.
+
+Target acquisition also tracks whether a target came from an explicit attack command, an automatic aggressive acquire, or a defensive reaction. This makes command replacement predictable and prevents old auto-acquired targets from overriding newer player orders.
 ## Ranged Combat
 
 Ranged units can define:
@@ -60,6 +73,8 @@ Ranged units can define:
 Use ranged units for archers, siege weapons, artillery, spell casters, or any unit that should damage enemies without closing to melee range.
 
 Ranged units can also reposition when they are too close or not in a valid firing setup. This is useful for units that need a minimum range, line of sight, or a bit of spacing before they can shoot cleanly.
+
+During defensive movement, ranged units may fire at valid immediate threats, but they do not backstep, chase, or reposition for line of sight if that would override the active move command.
 
 ## Damage And Death
 

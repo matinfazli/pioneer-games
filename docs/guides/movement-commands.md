@@ -26,13 +26,19 @@ When a command is issued:
 
 Select units and issue a ground move command. The selected units pathfind across the navmesh, avoid each other, and stop near their assigned destinations.
 
+Move uses defensive combat autonomy. Units keep the destination as their priority, but they can still fight immediate threats such as enemies already in attack range, enemies in close contact, or enemies that recently damaged them. Defensive fighting does not make the unit chase targets or cancel the move order.
+
 ### Attack Move
 
 Attack move sends units toward a ground location while allowing them to acquire and fight hostile units along the way. This is useful for advancing armies without requiring precise target clicks.
 
+Attack move is aggressive. Units can acquire targets within the engagement radius, chase them, and resume command behavior after combat resolves.
+
 ### Attack
 
 Attack commands target a specific hostile Mass entity. The combat system handles target approach, melee or ranged engagement, projectile behavior, damage, and death.
+
+Issuing a new attack command replaces the previous combat target immediately when the target is valid and hostile.
 
 ### Hold Position
 
@@ -49,6 +55,8 @@ Follow keeps selected units near an Actor or Mass entity target. This is useful 
 ### Retreat
 
 Retreat moves units away from a threat location by a configured distance.
+
+Retreat suppresses combat target acquisition while the retreat command is active.
 
 ### Charge
 
