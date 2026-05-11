@@ -6,6 +6,14 @@ sidebar_position: 10
 
 # Updates
 
+## Version 4.1
+
+**Defensive move behavior**
+
+Move orders now stay focused on their destination while still letting units defend themselves against immediate nearby threats. This keeps normal movement from turning into unwanted enemy chases.
+
+---
+
 ## Version 4.0 - Combat Update
 
 Version 4.0 expands Pioneer from a mass movement and rendering foundation into a broader gameplay toolkit for strategy and top-down combat projects. It is the update that connects the large-unit foundation to the moment-to-moment systems players expect: fighting, grouping, formations, queued orders, and readable animation.
